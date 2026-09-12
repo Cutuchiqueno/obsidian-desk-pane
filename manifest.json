@@ -1,0 +1,10 @@
+{
+	"id": "desk",
+	"name": "Desk",
+	"version": "0.1.0",
+	"minAppVersion": "1.13.0",
+	"description": "A pane in the sidebar where you can put notes temporarily while you are writing in your current note of focus.",
+	"author": "Cutuchiqueno",
+	"authorUrl": "https://github.com/Cutuchiqueno",
+	"isDesktopOnly": false
+}
