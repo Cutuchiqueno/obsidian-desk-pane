@@ -1,9 +1,17 @@
 import { App, PluginSettingTab } from 'obsidian';
+import type { SettingDefinitionItem } from 'obsidian';
 import type DeskPlugin from './main';
+import type { DeskEntry } from './desk/types';
 
-export type DeskSettings = Record<string, never>;
+export interface DeskSettings {
+	entries: DeskEntry[];
+	defaultFolded: boolean;
+}
 
-export const DEFAULT_SETTINGS: DeskSettings = {};
+export const DEFAULT_SETTINGS: DeskSettings = {
+	entries: [],
+	defaultFolded: true,
+};
 
 export class DeskSettingTab extends PluginSettingTab {
 	plugin: DeskPlugin;
@@ -13,7 +21,13 @@ export class DeskSettingTab extends PluginSettingTab {
 		this.plugin = plugin;
 	}
 
-	getSettingDefinitions() {
-		return [];
+	getSettingDefinitions(): SettingDefinitionItem[] {
+		return [
+			{
+				name: 'Add new notes folded',
+				desc: 'When a note is added to the Desk pane, show only its title until you expand it.',
+				control: { type: 'toggle', key: 'defaultFolded' },
+			},
+		];
 	}
 }

@@ -1,0 +1,58 @@
+.desk-view {
+	padding: var(--size-4-2) var(--size-4-1);
+}
+
+.desk-view .desk-empty {
+	padding: var(--size-4-4) var(--size-4-3);
+	color: var(--text-faint);
+	font-size: var(--font-ui-small);
+	text-align: center;
+}
+
+.desk-view .desk-empty.is-hidden {
+	display: none;
+}
+
+.desk-view .desk-item-header {
+	cursor: grab;
+}
+
+.desk-view .desk-item.is-dragging {
+	opacity: 0.4;
+}
+
+.desk-view .desk-item.desk-item-missing .desk-item-title {
+	color: var(--text-faint);
+	text-decoration: line-through;
+}
+
+.desk-view .desk-item.is-collapsed > .tree-item-children {
+	display: none;
+}
+
+.desk-view .desk-item.is-collapsed .collapse-icon svg {
+	transform: rotate(-90deg);
+}
+
+.desk-view .desk-item-preview {
+	padding: var(--size-4-1) var(--size-4-2) var(--size-4-3) var(--size-4-4);
+	font-size: var(--font-ui-small);
+	user-select: text;
+}
+
+.desk-view .desk-item-preview > :first-child {
+	margin-top: 0;
+}
+
+.desk-view .desk-item-preview > :last-child {
+	margin-bottom: 0;
+}
+
+/* Sits between rows during a drag; zero net height so the list doesn't shift. */
+.desk-view .desk-drop-indicator {
+	height: 2px;
+	margin: -1px 0;
+	border-radius: 1px;
+	background-color: var(--interactive-accent);
+	pointer-events: none;
+}
