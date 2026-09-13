@@ -23,6 +23,9 @@
 - A **×** button on each note, shown on hover, to take it off the desk.
 - Buttons at the top of the pane to **Collapse all** or **Expand all** notes, and to **Clear desk**
   after confirming.
+- A **Show search filter** button at the top of the pane, as in the Backlinks pane, that opens a
+  search field and shows only the notes whose title or text contains what you type. Hiding the
+  field clears the filter.
 - The pane highlights while a note or tab is dragged onto it, and an empty desk shows an icon with
   a hint.
 - Setting **Add new notes folded** to choose whether notes arrive folded or unfolded.

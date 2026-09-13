@@ -21,6 +21,9 @@ Open the pane with the ribbon icon or the **Desk: Open pane** command, then:
 - **Open a note** — right-click it and select **Open note**, or drag it into the editor area.
 - **Collapse all, expand all, clear the desk** — use the buttons at the top of the pane. Clearing
   asks first, and only takes the notes off the desk; they stay in your vault.
+- **Filter the desk** — select the search button at the top of the pane and type. Only notes whose
+  title or text contains what you typed stay visible (case doesn't matter). Select the button again
+  to hide the field and show every note.
 
 The list and its fold states persist across restarts.
 

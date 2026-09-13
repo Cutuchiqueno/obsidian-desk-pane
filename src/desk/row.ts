@@ -32,7 +32,7 @@ export function setRowTitle(row: DeskRow, path: string, exists: boolean): void {
 	row.el.classList.toggle('desk-item-missing', !exists);
 }
 
-function basename(path: string): string {
+export function basename(path: string): string {
 	const name = path.slice(path.lastIndexOf('/') + 1);
 	return name.endsWith('.md') ? name.slice(0, -'.md'.length) : name;
 }

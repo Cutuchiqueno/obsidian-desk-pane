@@ -185,3 +185,21 @@
 	background-color: var(--interactive-accent);
 	pointer-events: none;
 }
+
+/* Filter */
+
+.desk-view .desk-item.is-filtered-out {
+	display: none;
+}
+
+.desk-view .desk-no-matches {
+	align-self: center;
+	padding: var(--size-4-4);
+	color: var(--text-faint);
+	font-size: var(--font-ui-small);
+	text-align: center;
+}
+
+.desk-view .desk-no-matches.is-hidden {
+	display: none;
+}

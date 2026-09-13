@@ -1,6 +1,7 @@
 import { Component, ItemView, Keymap, MarkdownRenderer, Menu, setIcon, TFile } from 'obsidian';
 import type { WorkspaceLeaf } from 'obsidian';
 import { DeskDragController } from './desk-drag';
+import { noteMatchesFilter } from './filter';
 import { createRow, setRowTitle } from './row';
 import type { DeskRow } from './row';
 import type { DeskStore } from './store';
@@ -16,8 +17,12 @@ interface MountedRow extends DeskRow {
 export class DeskView extends ItemView {
 	private listEl!: HTMLElement;
 	private emptyEl!: HTMLElement;
+	private noMatchesEl!: HTMLElement;
 	private toolbar!: DeskToolbar;
 	private readonly rows = new Map<string, MountedRow>();
+	private filterQuery = '';
+	/** Bumped on every filter pass, so a slower earlier pass can't overwrite a newer one's result. */
+	private filterPass = 0;
 
 	constructor(
 		leaf: WorkspaceLeaf,
@@ -42,13 +47,19 @@ export class DeskView extends ItemView {
 	protected override async onOpen(): Promise<void> {
 		this.contentEl.empty();
 		this.contentEl.addClass('desk-view');
-		this.toolbar = new DeskToolbar(this.app, this.contentEl, this.store);
+		this.toolbar = new DeskToolbar(this.app, this.contentEl, this.store, (query) =>
+			this.setFilter(query),
+		);
 		const bodyEl = this.contentEl.createDiv({ cls: 'desk-body' });
 		this.emptyEl = bodyEl.createDiv({ cls: 'desk-empty' });
 		setIcon(this.emptyEl.createDiv({ cls: 'desk-empty-icon' }), DESK_ICON);
 		this.emptyEl.createDiv({
 			cls: 'desk-empty-text',
 			text: 'Drag notes or tabs here to put them on your desk.',
+		});
+		this.noMatchesEl = bodyEl.createDiv({
+			cls: 'desk-empty-text desk-no-matches is-hidden',
+			text: 'No notes match the filter.',
 		});
 		this.listEl = bodyEl.createDiv({ cls: 'desk-list' });
 
@@ -59,6 +70,11 @@ export class DeskView extends ItemView {
 		this.registerDomEvent(this.listEl, 'click', (event) => this.onClick(event));
 		this.registerDomEvent(this.listEl, 'contextmenu', (event) => this.onContextMenu(event));
 		this.registerEvent(this.store.onChange((change) => this.render(change)));
+		this.registerEvent(
+			this.app.vault.on('modify', (file) => {
+				if (this.filterQuery && this.rows.has(file.path)) void this.applyFilter();
+			}),
+		);
 		this.render();
 	}
 
@@ -125,6 +141,7 @@ export class DeskView extends ItemView {
 	private render(change?: DeskChange): void {
 		if (change?.type === 'rename') {
 			this.relabelRow(change.oldPath, change.newPath);
+			void this.applyFilter();
 			return;
 		}
 
@@ -151,6 +168,26 @@ export class DeskView extends ItemView {
 			row.el.remove();
 			this.rows.delete(path);
 		}
+		void this.applyFilter();
+	}
+
+	private setFilter(query: string): void {
+		this.filterQuery = query.trim();
+		void this.applyFilter();
+	}
+
+	/** Hides the notes whose title and text don't contain the filter query. */
+	private async applyFilter(): Promise<void> {
+		const pass = ++this.filterPass;
+		const query = this.filterQuery;
+		const rows = Array.from(this.rows);
+		const matches = await Promise.all(
+			rows.map(([path]) => (query ? noteMatchesFilter(this.app, path, query) : Promise.resolve(true))),
+		);
+		if (pass !== this.filterPass) return;
+		rows.forEach(([, row], index) => row.el.toggleClass('is-filtered-out', !matches[index]));
+		const noneShown = rows.length > 0 && !matches.includes(true);
+		this.noMatchesEl.toggleClass('is-hidden', !noneShown);
 	}
 
 	private mountRow(path: string): MountedRow {
