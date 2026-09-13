@@ -63,6 +63,19 @@ export class DeskStore extends Events {
 		this.commit({ type: 'fold', path });
 	}
 
+	setAllFolded(collapsed: boolean): void {
+		const changed = this.entries.filter((entry) => entry.collapsed !== collapsed);
+		if (changed.length === 0) return;
+		for (const entry of changed) entry.collapsed = collapsed;
+		this.commit({ type: 'fold-all' });
+	}
+
+	clear(): void {
+		if (this.entries.length === 0) return;
+		this.entries.splice(0);
+		this.commit({ type: 'clear' });
+	}
+
 	renamePath(oldPath: string, newPath: string): void {
 		const entry = this.entries[this.indexOf(oldPath)];
 		if (!entry) return;

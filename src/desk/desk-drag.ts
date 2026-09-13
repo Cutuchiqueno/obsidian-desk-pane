@@ -56,6 +56,8 @@ export class DeskDragController extends Component {
 		this.registerDomEvent(document, 'dragenter', (evt) => this.onEditorDragOver(evt), capture);
 		this.registerDomEvent(document, 'dragover', (evt) => this.onEditorDragOver(evt), capture);
 		this.registerDomEvent(document, 'drop', (evt) => this.onEditorDrop(evt), capture);
+		// A drag cancelled over the pane (Escape, or dropped on nothing) can end without a dragleave.
+		this.registerDomEvent(document, 'dragend', () => this.clearDropState(), capture);
 	}
 
 	private onRowDragStart(evt: DragEvent): void {
@@ -74,7 +76,7 @@ export class DeskDragController extends Component {
 	private onRowDragEnd(): void {
 		const drag = this.rowDrag;
 		this.rowDrag = null;
-		hideIndicator(this.indicatorEl);
+		this.clearDropState();
 		if (!drag) return;
 		drag.rowEl.removeClass('is-dragging');
 		// Removed only now, so the row is still in place while Obsidian finishes the drag.
@@ -89,6 +91,8 @@ export class DeskDragController extends Component {
 		// dragenter, where it clears its docking overlay because it finds no drop location over a Desk.
 		if (this.tabDrag.inProgress && evt.type === 'dragover') evt.stopPropagation();
 		evt.dataTransfer.dropEffect = effect;
+		// Reordering already shows where the note lands; the pane lights up only for notes arriving.
+		this.paneEl.toggleClass('is-drop-target', !evt.dataTransfer.types.includes(DESK_ENTRY_MIME));
 		const { targetRowEl } = computeInsertionIndex(this.listEl, evt.clientY);
 		showIndicator(this.listEl, this.indicatorEl, targetRowEl);
 	}
@@ -96,7 +100,7 @@ export class DeskDragController extends Component {
 	private onPaneDragLeave(evt: DragEvent): void {
 		const leftTo = evt.relatedTarget;
 		if (leftTo instanceof Node && this.paneEl.contains(leftTo)) return;
-		hideIndicator(this.indicatorEl);
+		this.clearDropState();
 	}
 
 	private onPaneDrop(evt: DragEvent): void {
@@ -105,7 +109,7 @@ export class DeskDragController extends Component {
 		// Claimed even when nothing resolves, so the sidebar leaf underneath doesn't open the file itself.
 		evt.preventDefault();
 		const { index } = computeInsertionIndex(this.listEl, evt.clientY);
-		hideIndicator(this.indicatorEl);
+		this.clearDropState();
 
 		const tabNote = this.tabDrag.note;
 		if (tabNote) {
@@ -118,6 +122,11 @@ export class DeskDragController extends Component {
 				this.store.addOrMove(file.path, index + offset),
 			);
 		}
+	}
+
+	private clearDropState(): void {
+		hideIndicator(this.indicatorEl);
+		this.paneEl.removeClass('is-drop-target');
 	}
 
 	private paneDropEffect(dataTransfer: DataTransfer | null): 'move' | 'copy' | null {

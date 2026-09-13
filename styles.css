@@ -1,9 +1,53 @@
+/*
+ * Themes and snippets can tune the desk through these variables, e.g.
+ * `.desk-view { --desk-preview-max-height: 30em; }`.
+ */
 .desk-view {
-	padding: var(--size-4-2) var(--size-4-1);
+	--desk-card-gap: var(--size-4-2);
+	--desk-preview-max-height: 16em;
+
+	display: flex;
+	flex-direction: column;
+	padding: 0;
+	overflow: hidden;
 }
 
+.desk-view > .nav-header {
+	flex: 0 0 auto;
+}
+
+.desk-view .nav-action-button.is-disabled {
+	opacity: 0.4;
+	pointer-events: none;
+}
+
+/* The scrolling area below the toolbar, and the region lit up while something is dragged in. */
+.desk-view .desk-body {
+	display: flex;
+	flex: 1 1 auto;
+	flex-direction: column;
+	min-height: 0;
+	overflow-y: auto;
+	padding: var(--size-4-2) var(--size-4-3) var(--size-4-4);
+	border-radius: var(--radius-m);
+	transition: background-color 120ms ease-in-out, box-shadow 120ms ease-in-out;
+}
+
+.desk-view.is-drop-target .desk-body {
+	background-color: hsla(var(--interactive-accent-hsl), 0.08);
+	box-shadow: inset 0 0 0 2px hsla(var(--interactive-accent-hsl), 0.5);
+}
+
+/* Empty state */
+
 .desk-view .desk-empty {
-	padding: var(--size-4-4) var(--size-4-3);
+	display: flex;
+	flex: 1 1 auto;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	gap: var(--size-4-3);
+	padding: var(--size-4-8) var(--size-4-4);
 	color: var(--text-faint);
 	font-size: var(--font-ui-small);
 	text-align: center;
@@ -13,12 +57,72 @@
 	display: none;
 }
 
-.desk-view .desk-item-header {
-	cursor: grab;
+.desk-view .desk-empty-icon {
+	display: flex;
+	--icon-size: var(--icon-xl);
+	--icon-stroke: var(--icon-xl-stroke-width);
+}
+
+.desk-view .desk-empty-text {
+	max-width: 22em;
+}
+
+.desk-view.is-drop-target .desk-empty {
+	color: var(--text-accent);
+}
+
+/* Cards */
+
+.desk-view .desk-list {
+	display: flex;
+	flex-direction: column;
+	gap: var(--desk-card-gap);
+}
+
+.desk-view .desk-item {
+	overflow: hidden;
+	border: var(--border-width) solid var(--background-modifier-border);
+	border-radius: var(--radius-m);
+	background-color: var(--background-primary);
 }
 
 .desk-view .desk-item.is-dragging {
 	opacity: 0.4;
+}
+
+.desk-view .desk-item-header {
+	display: flex;
+	/* Buttons stay beside the first line when a long title wraps. */
+	align-items: flex-start;
+	gap: var(--size-4-1);
+	padding: var(--size-2-2);
+	cursor: var(--cursor);
+}
+
+.desk-view .desk-item-header:hover {
+	background-color: var(--background-modifier-hover);
+}
+
+.desk-view .desk-item-header .clickable-icon {
+	display: flex;
+	flex: 0 0 auto;
+	align-items: center;
+	justify-content: center;
+	width: var(--size-4-6);
+	height: var(--size-4-6);
+	padding: 0;
+	cursor: var(--cursor);
+}
+
+.desk-view .desk-item-title {
+	flex: 1 1 auto;
+	min-width: 0;
+	/* Centers the first line on the buttons beside it. */
+	padding-block: calc((var(--size-4-6) - 1lh) / 2);
+	color: var(--text-normal);
+	font-size: var(--font-ui-small);
+	font-weight: var(--font-medium);
+	overflow-wrap: anywhere;
 }
 
 .desk-view .desk-item.desk-item-missing .desk-item-title {
@@ -26,16 +130,38 @@
 	text-decoration: line-through;
 }
 
-.desk-view .desk-item.is-collapsed > .tree-item-children {
-	display: none;
+/* Hidden until the card is hovered or focused; always shown where there is no hover. */
+.desk-view .desk-item-remove {
+	opacity: 0;
+}
+
+.desk-view .desk-item-header:hover .desk-item-remove,
+.desk-view .desk-item-remove:focus-visible,
+.is-mobile .desk-view .desk-item-remove {
+	opacity: 1;
+}
+
+.desk-view .collapse-icon svg {
+	transition: transform 100ms ease-in-out;
 }
 
 .desk-view .desk-item.is-collapsed .collapse-icon svg {
 	transform: rotate(-90deg);
 }
 
+/* Preview */
+
+.desk-view .desk-item.is-collapsed > .desk-item-preview {
+	display: none;
+}
+
 .desk-view .desk-item-preview {
-	padding: var(--size-4-1) var(--size-4-2) var(--size-4-3) var(--size-4-4);
+	max-height: var(--desk-preview-max-height);
+	overflow-y: auto;
+	padding: var(--size-4-2) var(--size-4-3) var(--size-4-3);
+	border-top: var(--border-width) solid var(--background-modifier-border);
+	/* Muted below a normal-colored title, as in the search pane's results. */
+	color: var(--text-muted);
 	font-size: var(--font-ui-small);
 	user-select: text;
 }
@@ -48,10 +174,13 @@
 	margin-bottom: 0;
 }
 
-/* Sits between rows during a drag; zero net height so the list doesn't shift. */
+/*
+ * Sits in the gap between cards during a drag. Its negative margins cancel out its own height and
+ * the extra gap it adds, so the list doesn't shift.
+ */
 .desk-view .desk-drop-indicator {
 	height: 2px;
-	margin: -1px 0;
+	margin-block: calc(-1 * (var(--desk-card-gap) / 2 + 1px));
 	border-radius: 1px;
 	background-color: var(--interactive-accent);
 	pointer-events: none;

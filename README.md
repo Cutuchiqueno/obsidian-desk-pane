@@ -14,16 +14,23 @@ Open the pane with the ribbon icon or the **Desk: Open pane** command, then:
 - **Add a note without closing anything** — drag it from the File Explorer, drag link text into the
   pane, or run **Desk: Add current note**.
 - **Reorder** — drag a note's title row up or down within the pane.
-- **Remove** — right-click a note and select **Remove from desk**.
-- **Fold and unfold** — select the arrow next to a note to collapse it to its title, or expand it
-  to read a preview. Select the title itself to open the note.
+- **Remove** — hover a note and select its **×** button, or right-click it and select **Remove from
+  desk**.
+- **Fold and unfold** — select a note's title to collapse it to its title, or expand it to read a
+  preview. Long previews scroll inside their card.
+- **Open a note** — right-click it and select **Open note**, or drag it into the editor area.
+- **Collapse all, expand all, clear the desk** — use the buttons at the top of the pane. Clearing
+  asks first, and only takes the notes off the desk; they stay in your vault.
 
 The list and its fold states persist across restarts.
+
+To give previews more or less room, set `--desk-preview-max-height` in a CSS snippet, for example
+`.desk-view { --desk-preview-max-height: 30em; }`.
 
 ### Known limitations
 
 - Drag and drop needs a mouse or trackpad, so it does nothing on touch screens. The commands and
-  the right-click menu (**Move up**, **Move down**, **Remove from desk**) cover the same ground.
+  the right-click menu (**Open note**, **Move up**, **Move down**, **Remove from desk**) cover the same ground.
 - Moving tabs onto the desk relies on parts of Obsidian that aren't part of its plugin API, so an
   Obsidian update could break it until Desk is updated. When that happens, tabs dropped on the pane
   dock in the sidebar again; everything else keeps working.

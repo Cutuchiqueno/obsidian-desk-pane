@@ -1,10 +1,11 @@
-import { Component, ItemView, Keymap, MarkdownRenderer, Menu, TFile } from 'obsidian';
+import { Component, ItemView, Keymap, MarkdownRenderer, Menu, setIcon, TFile } from 'obsidian';
 import type { WorkspaceLeaf } from 'obsidian';
 import { DeskDragController } from './desk-drag';
 import { createRow, setRowTitle } from './row';
 import type { DeskRow } from './row';
 import type { DeskStore } from './store';
 import type { TabDrag } from './tab-drag';
+import { DeskToolbar } from './toolbar';
 import { DESK_ICON, VIEW_TYPE_DESK } from './types';
 import type { DeskChange } from './types';
 
@@ -15,6 +16,7 @@ interface MountedRow extends DeskRow {
 export class DeskView extends ItemView {
 	private listEl!: HTMLElement;
 	private emptyEl!: HTMLElement;
+	private toolbar!: DeskToolbar;
 	private readonly rows = new Map<string, MountedRow>();
 
 	constructor(
@@ -40,15 +42,20 @@ export class DeskView extends ItemView {
 	protected override async onOpen(): Promise<void> {
 		this.contentEl.empty();
 		this.contentEl.addClass('desk-view');
-		this.emptyEl = this.contentEl.createDiv({
-			cls: 'desk-empty',
+		this.toolbar = new DeskToolbar(this.app, this.contentEl, this.store);
+		const bodyEl = this.contentEl.createDiv({ cls: 'desk-body' });
+		this.emptyEl = bodyEl.createDiv({ cls: 'desk-empty' });
+		setIcon(this.emptyEl.createDiv({ cls: 'desk-empty-icon' }), DESK_ICON);
+		this.emptyEl.createDiv({
+			cls: 'desk-empty-text',
 			text: 'Drag notes or tabs here to put them on your desk.',
 		});
-		this.listEl = this.contentEl.createDiv({ cls: 'desk-list' });
+		this.listEl = bodyEl.createDiv({ cls: 'desk-list' });
 
 		this.addChild(
 			new DeskDragController(this.app, this.contentEl, this.listEl, this.store, this.tabDrag),
 		);
+		this.registerDomEvent(this.toolbar.el, 'click', (event) => this.toolbar.onClick(event));
 		this.registerDomEvent(this.listEl, 'click', (event) => this.onClick(event));
 		this.registerDomEvent(this.listEl, 'contextmenu', (event) => this.onContextMenu(event));
 		this.registerEvent(this.store.onChange((change) => this.render(change)));
@@ -63,13 +70,13 @@ export class DeskView extends ItemView {
 	private onClick(event: MouseEvent): void {
 		const path = this.pathFromEvent(event);
 		if (!path) return;
-		if (event.target instanceof Element && event.target.closest('.collapse-icon')) {
+		const target = event.target instanceof Element ? event.target : null;
+		if (target?.closest('.desk-item-remove')) {
+			this.store.removeByPath(path);
+		} else if (target?.closest('.desk-item-header')) {
+			// Clicks inside a preview are left alone, for selecting text and following links.
 			this.store.toggleFold(path);
-			return;
 		}
-		const file = this.fileForPath(path);
-		if (!file) return;
-		void this.app.workspace.getLeaf(Keymap.isModEvent(event)).openFile(file);
 	}
 
 	private onContextMenu(event: MouseEvent): void {
@@ -80,6 +87,17 @@ export class DeskView extends ItemView {
 		event.preventDefault();
 
 		const menu = new Menu();
+		const file = this.fileForPath(path);
+		menu.addItem((item) =>
+			item
+				.setTitle('Open note')
+				.setIcon('file-text')
+				.setDisabled(!file)
+				.onClick(() => {
+					if (file) void this.app.workspace.getLeaf(Keymap.isModEvent(event)).openFile(file);
+				}),
+		);
+		menu.addSeparator();
 		menu.addItem((item) =>
 			item
 				.setTitle('Move up')
@@ -112,6 +130,7 @@ export class DeskView extends ItemView {
 
 		const entries = this.store.entries;
 		this.emptyEl.classList.toggle('is-hidden', entries.length > 0);
+		this.toolbar.update();
 
 		const listed = new Set<string>();
 		let cursor: ChildNode | null = this.listEl.firstChild;

@@ -12,4 +12,5 @@ export interface DeskEntry {
 
 export type DeskChange =
 	| { type: 'add' | 'remove' | 'move' | 'fold'; path: string }
-	| { type: 'rename'; oldPath: string; newPath: string };
+	| { type: 'rename'; oldPath: string; newPath: string }
+	| { type: 'fold-all' | 'clear' };
