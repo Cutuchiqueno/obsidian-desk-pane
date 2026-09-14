@@ -1,4 +1,4 @@
-# Obsidian community plugin — Desk
+# Obsidian community plugin — Desk Sidebar
 
 ## Project overview
 
@@ -69,7 +69,7 @@ npm run build
 ## Manifest rules (`manifest.json`)
 
 - Must include (non-exhaustive):
-    - `id` (plugin ID, currently `desk`; for local dev it should match the folder name)
+    - `id` (plugin ID, currently `desk-sidebar`; for local dev it should match the folder name)
     - `name`
     - `version` (Semantic Versioning `x.y.z`)
     - `minAppVersion`
@@ -84,7 +84,7 @@ npm run build
 
 - Manual install for testing: copy or symlink `main.js`, `manifest.json`, `styles.css` (if any) to:
     ```
-    <Vault>/.obsidian/plugins/desk/
+    <Vault>/.obsidian/plugins/desk-sidebar/
     ```
 - Reload Obsidian and enable the plugin in **Settings → Community plugins**.
 - If Obsidian is sandboxed (Flatpak/Snap), a symlink may not resolve unless the vault path is
@@ -339,7 +339,7 @@ this.registerInterval(
 ## Troubleshooting
 
 - Plugin doesn't load after build: ensure `main.js` and `manifest.json` are at the top level of the
-  plugin folder under `<Vault>/.obsidian/plugins/desk/`.
+  plugin folder under `<Vault>/.obsidian/plugins/desk-sidebar/`.
 - Build issues: if `main.js` is missing, run `npm run build` or `npm run dev` to compile the
   TypeScript source.
 - Commands not appearing: verify `addCommand` runs after `onload` and IDs are unique.

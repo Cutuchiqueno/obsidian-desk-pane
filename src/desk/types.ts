@@ -1,9 +1,9 @@
-export const VIEW_TYPE_DESK = 'desk-view';
+export const VIEW_TYPE_DESK = 'desk-sidebar-view';
 
 export const DESK_ICON = 'panel-right';
 
 /** Carries the path of a note dragged out of the Desk list, telling it apart from other drags. */
-export const DESK_ENTRY_MIME = 'application/x-desk-entry';
+export const DESK_ENTRY_MIME = 'application/x-desk-sidebar-entry';
 
 /** Obsidian's named theme colors, in the order grouping sorts them. */
 export const DESK_COLORS = ['red', 'orange', 'yellow', 'green', 'cyan', 'blue', 'purple', 'pink'] as const;

@@ -5,7 +5,7 @@
 ### Added
 
 - Desk pane in the sidebar holding a manually curated, ordered list of notes, opened from the
-  ribbon icon or the **Desk: Open pane** command.
+  ribbon icon or the **Desk Sidebar: Open pane** command.
 - Drag a note's tab from the editor area onto the pane to close the tab and put the note on the
   desk, at the position you drop it.
 - Drag a note from the pane into the editor area to open it as its own tab and take it off the
@@ -16,7 +16,7 @@
 - Fold a note down to its title, or unfold it to read a preview of the note in the pane, by
   selecting its title. Long titles wrap instead of being cut off.
 - Commands **Add current note** and **Remove current note**, plus a right-click menu on each note
-  with **Open note**, **Move up**, **Move down**, and **Remove from desk** — the way to use Desk without a mouse,
+  with **Open note**, **Move up**, **Move down**, and **Remove from desk** — the way to use Desk Sidebar without a mouse,
   since drag and drop needs one.
 - Each note sits on its own card. Unfolded previews are capped in height and scroll within the
   card; a CSS snippet can change the cap through `--desk-preview-max-height`.

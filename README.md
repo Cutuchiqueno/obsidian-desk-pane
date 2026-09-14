@@ -1,10 +1,10 @@
-# Desk
+# Desk Sidebar
 
 A pane in the sidebar where you can put notes temporarily while you are writing in your current note of focus.
 
 ## Usage
 
-Open the pane with the ribbon icon or the **Desk: Open pane** command, then:
+Open the pane with the ribbon icon or the **Desk Sidebar: Open pane** command, then:
 
 - **Move a tab onto the desk** — drag a note's tab from the editor area into the pane. The tab
   closes and the note joins the list where you drop it. Dropping onto the sidebar's tab icons still
@@ -12,7 +12,7 @@ Open the pane with the ribbon icon or the **Desk: Open pane** command, then:
 - **Move a note back into the editor** — drag a note out of the pane into the editor area. It opens
   as its own tab in the tab group you drop it on, and leaves the desk.
 - **Add a note without closing anything** — drag it from the File Explorer, drag link text into the
-  pane, or run **Desk: Add current note**.
+  pane, or run **Desk Sidebar: Add current note**.
 - **Reorder** — drag a note's title row up or down within the pane.
 - **Remove** — hover a note and select its **×** button, or right-click it and select **Remove from
   desk**.
@@ -26,11 +26,11 @@ Open the pane with the ribbon icon or the **Desk: Open pane** command, then:
   to hide the field and show every note.
 - **Color a note** — hover a note and select the dot next to its **×** to pick one of your theme's
   named colors, or **No color**.
-- **Group by color** — select the group button at the top of the pane, or run **Desk: Toggle
-  grouping by color**, to sort the notes into one block per color under headers. Notes without a
-  color come last. Changing a note's color while grouped moves it to its new block; dragging a note
-  out of its block ends the grouping. Select the button again to remove the headers and keep the
-  order.
+- **Group by color** — select the group button at the top of the pane, or run **Desk Sidebar:
+  Toggle grouping by color**, to sort the notes into one block per color under headers. Notes
+  without a color come last. Changing a note's color while grouped moves it to its new block;
+  dragging a note out of its block ends the grouping. Select the button again to remove the headers
+  and keep the order.
 - **Filter by color** — select the palette button at the top of the pane to list the colors in use
   with their note counts. Select colors to show only their notes; this combines with the search
   filter. Select a color's **×** to take that color off all its notes, or **Remove all colors** to
@@ -46,8 +46,8 @@ To give previews more or less room, set `--desk-preview-max-height` in a CSS sni
 - Drag and drop needs a mouse or trackpad, so it does nothing on touch screens. The commands and
   the right-click menu (**Open note**, **Move up**, **Move down**, **Remove from desk**) cover the same ground.
 - Moving tabs onto the desk relies on parts of Obsidian that aren't part of its plugin API, so an
-  Obsidian update could break it until Desk is updated. When that happens, tabs dropped on the pane
-  dock in the sidebar again; everything else keeps working.
+  Obsidian update could break it until Desk Sidebar is updated. When that happens, tabs dropped on
+  the pane dock in the sidebar again; everything else keeps working.
 - Only Markdown notes can be put on the desk.
 - Previews are read-only, and are rendered when a note is unfolded — edit the note by opening it.
 
@@ -63,8 +63,8 @@ This project follows the conventions described in [AGENTS.md](AGENTS.md) — rea
 
 ### Testing in Obsidian
 
-Copy or symlink this repo into `<Vault>/.obsidian/plugins/desk/`, then enable **Desk** under
-**Settings → Community plugins** in that vault.
+Copy or symlink this repo into `<Vault>/.obsidian/plugins/desk-sidebar/`, then enable
+**Desk Sidebar** under **Settings → Community plugins** in that vault.
 
 If your Obsidian install is sandboxed (Flatpak, Snap), a symlink outside the sandbox's exposed
 filesystem may not resolve. For Flatpak, check `flatpak info --show-permissions md.obsidian.Obsidian`
