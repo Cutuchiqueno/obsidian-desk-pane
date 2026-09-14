@@ -6,11 +6,13 @@ import type { DeskEntry } from './desk/types';
 export interface DeskSettings {
 	entries: DeskEntry[];
 	defaultFolded: boolean;
+	groupedByColor: boolean;
 }
 
 export const DEFAULT_SETTINGS: DeskSettings = {
 	entries: [],
 	defaultFolded: true,
+	groupedByColor: false,
 };
 
 export class DeskSettingTab extends PluginSettingTab {

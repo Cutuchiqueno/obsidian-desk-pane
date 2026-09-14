@@ -1,17 +1,23 @@
 import { Component, ItemView, Keymap, MarkdownRenderer, Menu, setIcon, TFile } from 'obsidian';
 import type { WorkspaceLeaf } from 'obsidian';
+import { setColorAttr, showColorMenu } from './color';
 import { DeskDragController } from './desk-drag';
 import { noteMatchesFilter } from './filter';
-import { createRow, setRowTitle } from './row';
-import type { DeskRow } from './row';
+import { createGroupHeader, createRow, setRowTitle } from './row';
+import type { DeskRow, GroupHeader } from './row';
 import type { DeskStore } from './store';
 import type { TabDrag } from './tab-drag';
 import { DeskToolbar } from './toolbar';
 import { DESK_ICON, VIEW_TYPE_DESK } from './types';
-import type { DeskChange } from './types';
+import type { DeskChange, DeskColor } from './types';
 
 interface MountedRow extends DeskRow {
 	preview: Component | null;
+}
+
+interface MountedGroup extends GroupHeader {
+	color: DeskColor | undefined;
+	rows: MountedRow[];
 }
 
 export class DeskView extends ItemView {
@@ -20,7 +26,9 @@ export class DeskView extends ItemView {
 	private noMatchesEl!: HTMLElement;
 	private toolbar!: DeskToolbar;
 	private readonly rows = new Map<string, MountedRow>();
+	private groups: MountedGroup[] = [];
 	private filterQuery = '';
+	private colorFilter: ReadonlySet<DeskColor> = new Set();
 	/** Bumped on every filter pass, so a slower earlier pass can't overwrite a newer one's result. */
 	private filterPass = 0;
 
@@ -47,8 +55,12 @@ export class DeskView extends ItemView {
 	protected override async onOpen(): Promise<void> {
 		this.contentEl.empty();
 		this.contentEl.addClass('desk-view');
-		this.toolbar = new DeskToolbar(this.app, this.contentEl, this.store, (query) =>
-			this.setFilter(query),
+		this.toolbar = new DeskToolbar(
+			this.app,
+			this.contentEl,
+			this.store,
+			(query) => this.setFilter(query),
+			(colors) => this.setColorFilter(colors),
 		);
 		const bodyEl = this.contentEl.createDiv({ cls: 'desk-body' });
 		this.emptyEl = bodyEl.createDiv({ cls: 'desk-empty' });
@@ -80,6 +92,7 @@ export class DeskView extends ItemView {
 
 	protected override async onClose(): Promise<void> {
 		this.rows.clear();
+		this.groups = [];
 		this.contentEl.empty();
 	}
 
@@ -89,6 +102,9 @@ export class DeskView extends ItemView {
 		const target = event.target instanceof Element ? event.target : null;
 		if (target?.closest('.desk-item-remove')) {
 			this.store.removeByPath(path);
+		} else if (target?.closest('.desk-item-color')) {
+			const current = this.store.entries[this.store.indexOf(path)]?.color;
+			showColorMenu(event, current, (color) => this.store.setColor(path, color));
 		} else if (target?.closest('.desk-item-header')) {
 			// Clicks inside a preview are left alone, for selecting text and following links.
 			this.store.toggleFold(path);
@@ -149,17 +165,30 @@ export class DeskView extends ItemView {
 		this.emptyEl.classList.toggle('is-hidden', entries.length > 0);
 		this.toolbar.update();
 
+		// Headers are rebuilt on every render, since any change can move where a color's block starts.
+		for (const { el } of this.groups) el.remove();
+		this.groups = [];
+		const grouped = this.store.groupedByColor;
+		let group: MountedGroup | undefined;
+
 		const listed = new Set<string>();
 		let cursor: ChildNode | null = this.listEl.firstChild;
 		for (const entry of entries) {
 			listed.add(entry.path);
 			const row = this.rows.get(entry.path) ?? this.mountRow(entry.path);
+			if (grouped && (!group || group.color !== entry.color)) {
+				group = { ...createGroupHeader(entry.color), color: entry.color, rows: [] };
+				this.groups.push(group);
+				this.listEl.insertBefore(group.el, cursor);
+			}
+			group?.rows.push(row);
 			if (cursor === row.el) {
 				cursor = row.el.nextSibling;
 			} else {
 				this.listEl.insertBefore(row.el, cursor);
 			}
 			this.syncFold(row, entry.path, entry.collapsed);
+			setColorAttr(row.el, entry.color);
 		}
 
 		for (const [path, row] of this.rows) {
@@ -168,6 +197,7 @@ export class DeskView extends ItemView {
 			row.el.remove();
 			this.rows.delete(path);
 		}
+		this.syncGroups();
 		void this.applyFilter();
 	}
 
@@ -176,18 +206,39 @@ export class DeskView extends ItemView {
 		void this.applyFilter();
 	}
 
-	/** Hides the notes whose title and text don't contain the filter query. */
+	private setColorFilter(colors: ReadonlySet<DeskColor>): void {
+		this.colorFilter = colors;
+		void this.applyFilter();
+	}
+
+	/** Hides the notes that don't match the search filter's text or the color filter's colors. */
 	private async applyFilter(): Promise<void> {
 		const pass = ++this.filterPass;
 		const query = this.filterQuery;
+		const colors = this.colorFilter;
+		const colorByPath = new Map(this.store.entries.map((entry) => [entry.path, entry.color]));
 		const rows = Array.from(this.rows);
 		const matches = await Promise.all(
-			rows.map(([path]) => (query ? noteMatchesFilter(this.app, path, query) : Promise.resolve(true))),
+			rows.map(([path]) => {
+				const color = colorByPath.get(path);
+				if (colors.size > 0 && !(color && colors.has(color))) return Promise.resolve(false);
+				return query ? noteMatchesFilter(this.app, path, query) : Promise.resolve(true);
+			}),
 		);
 		if (pass !== this.filterPass) return;
 		rows.forEach(([, row], index) => row.el.toggleClass('is-filtered-out', !matches[index]));
 		const noneShown = rows.length > 0 && !matches.includes(true);
 		this.noMatchesEl.toggleClass('is-hidden', !noneShown);
+		this.syncGroups();
+	}
+
+	/** Counts the notes each group shows, hiding the header of a group the filters leave empty. */
+	private syncGroups(): void {
+		for (const group of this.groups) {
+			const shown = group.rows.filter((row) => !row.el.hasClass('is-filtered-out')).length;
+			group.countEl.setText(String(shown));
+			group.el.toggleClass('is-hidden', shown === 0);
+		}
 	}
 
 	private mountRow(path: string): MountedRow {

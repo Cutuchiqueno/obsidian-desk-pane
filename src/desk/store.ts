@@ -1,7 +1,8 @@
 import { Events } from 'obsidian';
 import type { EventRef } from 'obsidian';
 import type DeskPlugin from '../main';
-import type { DeskChange, DeskEntry } from './types';
+import { DESK_COLORS } from './types';
+import type { DeskChange, DeskColor, DeskEntry } from './types';
 
 export class DeskStore extends Events {
 	constructor(private plugin: DeskPlugin) {
@@ -14,6 +15,10 @@ export class DeskStore extends Events {
 
 	get entries(): DeskEntry[] {
 		return this.plugin.settings.entries;
+	}
+
+	get groupedByColor(): boolean {
+		return this.plugin.settings.groupedByColor;
 	}
 
 	indexOf(path: string): number {
@@ -83,6 +88,45 @@ export class DeskStore extends Events {
 		this.commit({ type: 'rename', oldPath, newPath });
 	}
 
+	setColor(path: string, color: DeskColor | undefined): void {
+		const entry = this.entries[this.indexOf(path)];
+		if (!entry || entry.color === color) return;
+		entry.color = color;
+		this.regroup();
+		this.commit({ type: 'color', path });
+	}
+
+	clearColor(color: DeskColor): void {
+		this.uncolor((entry) => entry.color === color);
+	}
+
+	clearAllColors(): void {
+		this.uncolor((entry) => entry.color !== undefined);
+	}
+
+	/** Grouping sorts the notes into one block per color, which the pane shows under headers. */
+	setGroupedByColor(grouped: boolean): void {
+		if (grouped === this.groupedByColor) return;
+		if (grouped && !this.entries.some((entry) => entry.color)) return;
+		this.plugin.settings.groupedByColor = grouped;
+		this.regroup();
+		this.commit({ type: 'group' });
+	}
+
+	private uncolor(matches: (entry: DeskEntry) => boolean): void {
+		const matching = this.entries.filter(matches);
+		if (matching.length === 0) return;
+		for (const entry of matching) entry.color = undefined;
+		this.regroup();
+		this.commit({ type: 'uncolor' });
+	}
+
+	/** While grouped, a note whose color changes moves into the block of its new color. */
+	private regroup(): void {
+		// `sort` is stable, so the notes of a block keep their order.
+		if (this.groupedByColor) this.entries.sort((a, b) => colorRank(a) - colorRank(b));
+	}
+
 	/**
 	 * `targetIndex` is an insertion point in the list as it looks *before* the entry is pulled
 	 * out, so a drop indicator's position maps to it directly.
@@ -98,7 +142,26 @@ export class DeskStore extends Events {
 	}
 
 	private commit(change: DeskChange): void {
+		// A change that leaves a note outside its color's block, like dragging it away, ends grouping.
+		if (this.groupedByColor && !isInColorBlocks(this.entries)) {
+			this.plugin.settings.groupedByColor = false;
+		}
 		void this.plugin.saveData(this.plugin.settings);
 		this.trigger('changed', change);
 	}
+}
+
+/** Palette order, with the notes that have no color last. */
+function colorRank(entry: DeskEntry): number {
+	return entry.color ? DESK_COLORS.indexOf(entry.color) : DESK_COLORS.length;
+}
+
+function isInColorBlocks(entries: DeskEntry[]): boolean {
+	let previousRank = -Infinity;
+	for (const entry of entries) {
+		const rank = colorRank(entry);
+		if (rank < previousRank) return false;
+		previousRank = rank;
+	}
+	return entries.some((entry) => entry.color);
 }

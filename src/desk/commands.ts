@@ -44,5 +44,16 @@ export function registerDeskCommands(plugin: DeskPlugin, store: DeskStore): void
 		},
 	});
 
+	plugin.addCommand({
+		id: 'toggle-group-by-color',
+		name: 'Toggle grouping by color',
+		checkCallback: (checking) => {
+			const grouped = store.groupedByColor;
+			if (!grouped && !store.entries.some((entry) => entry.color)) return false;
+			if (!checking) store.setGroupedByColor(!grouped);
+			return true;
+		},
+	});
+
 	plugin.addRibbonIcon(DESK_ICON, 'Open desk', () => void activateDeskView(plugin.app));
 }

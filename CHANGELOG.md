@@ -29,5 +29,16 @@
 - The pane highlights while a note or tab is dragged onto it, and an empty desk shows an icon with
   a hint.
 - Setting **Add new notes folded** to choose whether notes arrive folded or unfolded.
+- Give a note a color with the **Set color** dot on its title row, shown on hover: one of the
+  theme's named colors (red, orange, yellow, green, cyan, blue, purple, pink), which tints its card
+  the way Canvas tints a colored card.
+- A **Group by color** button at the top of the pane, and the **Toggle grouping by color** command,
+  that sort the notes into one block per color under headers, with the notes without a color last.
+  Changing a note's color while grouped moves it to its new color's block; dragging a note out of
+  its block ends the grouping. Selecting the button again removes the headers and keeps the order.
+- A **Show color filter** button at the top of the pane that lists the colors in use with their
+  note counts. Select colors to show only their notes, together with the search filter. Each color
+  has a **×** to take it off all its notes, and **Remove all colors** clears every color after
+  confirming. Hiding the list clears the color filter.
 
 [unreleased]: https://github.com/Cutuchiqueno/obsidian-desk-pane/compare/0.1.0...HEAD

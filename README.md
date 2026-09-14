@@ -24,8 +24,19 @@ Open the pane with the ribbon icon or the **Desk: Open pane** command, then:
 - **Filter the desk** — select the search button at the top of the pane and type. Only notes whose
   title or text contains what you typed stay visible (case doesn't matter). Select the button again
   to hide the field and show every note.
+- **Color a note** — hover a note and select the dot next to its **×** to pick one of your theme's
+  named colors, or **No color**.
+- **Group by color** — select the group button at the top of the pane, or run **Desk: Toggle
+  grouping by color**, to sort the notes into one block per color under headers. Notes without a
+  color come last. Changing a note's color while grouped moves it to its new block; dragging a note
+  out of its block ends the grouping. Select the button again to remove the headers and keep the
+  order.
+- **Filter by color** — select the palette button at the top of the pane to list the colors in use
+  with their note counts. Select colors to show only their notes; this combines with the search
+  filter. Select a color's **×** to take that color off all its notes, or **Remove all colors** to
+  clear every color. Select the palette button again to hide the list and show every note.
 
-The list and its fold states persist across restarts.
+The list, its fold states, colors, and grouping persist across restarts.
 
 To give previews more or less room, set `--desk-preview-max-height` in a CSS snippet, for example
 `.desk-view { --desk-preview-max-height: 30em; }`.

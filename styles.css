@@ -131,12 +131,16 @@
 }
 
 /* Hidden until the card is hovered or focused; always shown where there is no hover. */
+.desk-view .desk-item-color,
 .desk-view .desk-item-remove {
 	opacity: 0;
 }
 
+.desk-view .desk-item-header:hover .desk-item-color,
 .desk-view .desk-item-header:hover .desk-item-remove,
+.desk-view .desk-item-color:focus-visible,
 .desk-view .desk-item-remove:focus-visible,
+.is-mobile .desk-view .desk-item-color,
 .is-mobile .desk-view .desk-item-remove {
 	opacity: 1;
 }
@@ -202,4 +206,138 @@
 
 .desk-view .desk-no-matches.is-hidden {
 	display: none;
+}
+
+/*
+ * Colors. Not scoped to `.desk-view`, since the color menu opens outside the pane. Each color
+ * becomes `--desk-color` for the element and everything inside it.
+ */
+
+[data-desk-color='red'] {
+	--desk-color: var(--color-red);
+}
+
+[data-desk-color='orange'] {
+	--desk-color: var(--color-orange);
+}
+
+[data-desk-color='yellow'] {
+	--desk-color: var(--color-yellow);
+}
+
+[data-desk-color='green'] {
+	--desk-color: var(--color-green);
+}
+
+[data-desk-color='cyan'] {
+	--desk-color: var(--color-cyan);
+}
+
+[data-desk-color='blue'] {
+	--desk-color: var(--color-blue);
+}
+
+[data-desk-color='purple'] {
+	--desk-color: var(--color-purple);
+}
+
+[data-desk-color='pink'] {
+	--desk-color: var(--color-pink);
+}
+
+.desk-color-swatch {
+	display: inline-block;
+	flex: 0 0 auto;
+	width: var(--size-4-3);
+	height: var(--size-4-3);
+	border-radius: 50%;
+	background-color: var(--desk-color, transparent);
+	/* An empty ring where there is no color. */
+	box-shadow: inset 0 0 0 var(--border-width) var(--desk-color, var(--text-muted));
+}
+
+.desk-color-option {
+	display: inline-flex;
+	align-items: center;
+	gap: var(--size-4-2);
+}
+
+/* Tinted the way Canvas tints a colored card. */
+.desk-view .desk-item[data-desk-color] {
+	border-color: color-mix(in oklch, var(--desk-color) 70%, transparent);
+	background-color: color-mix(in srgb, var(--desk-color) 7%, var(--background-primary));
+}
+
+/* Group headers */
+
+.desk-view .desk-group-header {
+	display: flex;
+	align-items: center;
+	gap: var(--size-4-2);
+	padding-inline: var(--size-2-3);
+	color: var(--text-muted);
+	font-size: var(--font-ui-smaller);
+	font-weight: var(--font-semibold);
+}
+
+.desk-view .desk-group-header:not(:first-child) {
+	margin-top: var(--size-4-2);
+}
+
+.desk-view .desk-group-header.is-hidden {
+	display: none;
+}
+
+.desk-view .desk-group-count {
+	margin-inline-start: auto;
+	color: var(--text-faint);
+	font-weight: var(--font-normal);
+}
+
+/* Color filter, listed like tags in the Tags pane */
+
+.desk-view .desk-color-filter {
+	margin-top: var(--size-4-1);
+}
+
+/*
+ * Without a tree's indent, the dots line up with the group headers' dots below. Margins rather than
+ * `gap`, which would also open up after the row's zero-width `::before`.
+ */
+.desk-view .desk-color-filter .tree-item-self {
+	align-items: center;
+	padding-inline-start: var(--size-4-2);
+}
+
+/* Centered in the eraser icon's width, so every label starts at the same place. */
+.desk-view .desk-color-filter .desk-color-swatch {
+	margin-inline-start: var(--size-2-1);
+	margin-inline-end: calc(var(--size-2-1) + var(--size-4-2));
+}
+
+.desk-view .desk-color-filter-icon {
+	display: flex;
+	margin-inline-end: var(--size-4-2);
+	--icon-size: var(--icon-s);
+}
+
+.desk-view .desk-color-filter-clear {
+	padding: var(--size-2-1);
+	opacity: 0;
+}
+
+.desk-view .desk-color-filter-item:hover .desk-color-filter-clear,
+.desk-view .desk-color-filter-clear:focus-visible,
+.is-mobile .desk-view .desk-color-filter-clear {
+	opacity: 1;
+}
+
+.desk-view .desk-color-filter-clear-all {
+	color: var(--text-muted);
+}
+
+.desk-view .desk-color-filter-empty {
+	padding: var(--size-4-1) var(--size-4-2);
+	color: var(--text-faint);
+	font-size: var(--font-ui-small);
 }
