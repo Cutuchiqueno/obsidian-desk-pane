@@ -2,8 +2,9 @@ import { Component, ItemView, Keymap, MarkdownRenderer, Menu, setIcon, TFile } f
 import type { WorkspaceLeaf } from 'obsidian';
 import { setColorAttr, showColorMenu } from './color';
 import { DeskDragController } from './desk-drag';
+import { DeskResizeController } from './desk-resize';
 import { noteMatchesFilter } from './filter';
-import { createGroupHeader, createRow, setRowTitle } from './row';
+import { createGroupHeader, createRow, setPreviewHeight, setRowTitle } from './row';
 import type { DeskRow, GroupHeader } from './row';
 import type { DeskStore } from './store';
 import type { TabDrag } from './tab-drag';
@@ -78,6 +79,7 @@ export class DeskView extends ItemView {
 		this.addChild(
 			new DeskDragController(this.app, this.contentEl, this.listEl, this.store, this.tabDrag),
 		);
+		this.addChild(new DeskResizeController(this.listEl, this.store));
 		this.registerDomEvent(this.toolbar.el, 'click', (event) => this.toolbar.onClick(event));
 		this.registerDomEvent(this.listEl, 'click', (event) => this.onClick(event));
 		this.registerDomEvent(this.listEl, 'contextmenu', (event) => this.onContextMenu(event));
@@ -147,6 +149,14 @@ export class DeskView extends ItemView {
 		menu.addSeparator();
 		menu.addItem((item) =>
 			item
+				.setTitle('Reset height')
+				.setIcon('unfold-vertical')
+				.setDisabled(this.store.entries[index]?.previewHeight === undefined)
+				.onClick(() => this.store.setPreviewHeight(path, undefined)),
+		);
+		menu.addSeparator();
+		menu.addItem((item) =>
+			item
 				.setTitle('Remove from desk')
 				.setIcon('x')
 				.onClick(() => this.store.removeByPath(path)),
@@ -189,6 +199,7 @@ export class DeskView extends ItemView {
 			}
 			this.syncFold(row, entry.path, entry.collapsed);
 			setColorAttr(row.el, entry.color);
+			setPreviewHeight(row.previewEl, entry.previewHeight);
 		}
 
 		for (const [path, row] of this.rows) {

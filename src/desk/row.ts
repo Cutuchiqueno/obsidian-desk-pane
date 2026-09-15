@@ -34,9 +34,14 @@ export function createRow(listEl: HTMLElement, path: string, collapsed: boolean)
 	});
 	setIcon(removeEl, 'x');
 	const previewEl = el.createDiv({ cls: 'desk-item-preview markdown-rendered' });
+	el.createDiv({ cls: 'desk-item-resize-handle' });
 
 	el.classList.toggle('is-collapsed', collapsed);
 	return { el, titleEl, previewEl };
+}
+
+export function setPreviewHeight(previewEl: HTMLElement, height: number | undefined): void {
+	previewEl.setCssProps({ '--desk-preview-height': height === undefined ? '' : `${height}px` });
 }
 
 /** Heads a block of same-colored notes while the desk is grouped by color. */

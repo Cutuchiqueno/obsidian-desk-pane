@@ -14,9 +14,11 @@ export interface DeskEntry {
 	path: string;
 	collapsed: boolean;
 	color?: DeskColor;
+	/** Pixels, from dragging the card's bottom edge; without it, the preview fits its note. */
+	previewHeight?: number;
 }
 
 export type DeskChange =
-	| { type: 'add' | 'remove' | 'move' | 'fold' | 'color'; path: string }
+	| { type: 'add' | 'remove' | 'move' | 'fold' | 'color' | 'resize'; path: string }
 	| { type: 'rename'; oldPath: string; newPath: string }
 	| { type: 'fold-all' | 'clear' | 'uncolor' | 'group' };

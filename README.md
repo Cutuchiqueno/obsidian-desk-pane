@@ -17,7 +17,12 @@ Open the pane with the ribbon icon or the **Desk Sidebar: Open pane** command, t
 - **Remove** — hover a note and select its **×** button, or right-click it and select **Remove from
   desk**.
 - **Fold and unfold** — select a note's title to collapse it to its title, or expand it to read a
-  preview. Long previews scroll inside their card.
+  preview. A card grows with its preview up to half the pane's height; longer previews scroll
+  inside it.
+- **Resize a card** — drag its bottom edge up or down. A card never grows past its note or half the
+  pane's height. It keeps the height you drag it to, also while it's folded, filtered, or grouped;
+  drag it all the way open, or right-click it and select **Reset height**, to fit it to its note
+  again.
 - **Open a note** — right-click it and select **Open note**, or drag it into the editor area.
 - **Collapse all, expand all, clear the desk** — use the buttons at the top of the pane. Clearing
   asks first, and only takes the notes off the desk; they stay in your vault.
@@ -36,10 +41,11 @@ Open the pane with the ribbon icon or the **Desk Sidebar: Open pane** command, t
   filter. Select a color's **×** to take that color off all its notes, or **Remove all colors** to
   clear every color. Select the palette button again to hide the list and show every note.
 
-The list, its fold states, colors, and grouping persist across restarts.
+The list, its fold states, card heights, colors, and grouping persist across restarts.
 
-To give previews more or less room, set `--desk-preview-max-height` in a CSS snippet, for example
-`.desk-view { --desk-preview-max-height: 30em; }`.
+To let cards grow taller or keep them shorter, set `--desk-card-max-height` in a CSS snippet, for
+example `.desk-view { --desk-card-max-height: 80cqh; }`, where `cqh` is a percent of the pane's
+height.
 
 ### Known limitations
 

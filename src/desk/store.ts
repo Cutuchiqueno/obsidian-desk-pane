@@ -96,6 +96,14 @@ export class DeskStore extends Events {
 		this.commit({ type: 'color', path });
 	}
 
+	/** `undefined` lets the preview fit its note again. */
+	setPreviewHeight(path: string, height: number | undefined): void {
+		const entry = this.entries[this.indexOf(path)];
+		if (!entry || entry.previewHeight === height) return;
+		entry.previewHeight = height;
+		this.commit({ type: 'resize', path });
+	}
+
 	clearColor(color: DeskColor): void {
 		this.uncolor((entry) => entry.color === color);
 	}

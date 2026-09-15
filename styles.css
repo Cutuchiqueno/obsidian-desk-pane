@@ -1,11 +1,13 @@
 /*
  * Themes and snippets can tune the desk through these variables, e.g.
- * `.desk-view { --desk-preview-max-height: 30em; }`.
+ * `.desk-view { --desk-card-max-height: 80cqh; }`, where `cqh` is a percent of the pane's height.
  */
 .desk-view {
 	--desk-card-gap: var(--size-4-2);
-	--desk-preview-max-height: 16em;
+	--desk-card-max-height: 50cqh;
 
+	/* Sizes `cqh` for the cards, so their cap follows the pane's height. */
+	container-type: size;
 	display: flex;
 	flex-direction: column;
 	padding: 0;
@@ -79,7 +81,13 @@
 	gap: var(--desk-card-gap);
 }
 
+/* Grows with its preview up to the cap, and the preview scrolls within it from there. */
 .desk-view .desk-item {
+	position: relative;
+	display: flex;
+	flex-direction: column;
+	box-sizing: border-box;
+	max-height: var(--desk-card-max-height);
 	overflow: hidden;
 	border: var(--border-width) solid var(--background-modifier-border);
 	border-radius: var(--radius-m);
@@ -92,6 +100,7 @@
 
 .desk-view .desk-item-header {
 	display: flex;
+	flex: 0 0 auto;
 	/* Buttons stay beside the first line when a long title wraps. */
 	align-items: flex-start;
 	gap: var(--size-4-1);
@@ -159,8 +168,14 @@
 	display: none;
 }
 
+/*
+ * Fits its note, or the shorter height its card's bottom edge was dragged to, so it never leaves
+ * empty space below the note. It scrolls beyond that, and shrinks to fit a capped card.
+ */
 .desk-view .desk-item-preview {
-	max-height: var(--desk-preview-max-height);
+	box-sizing: border-box;
+	min-height: 0;
+	max-height: var(--desk-preview-height, none);
 	overflow-y: auto;
 	padding: var(--size-4-2) var(--size-4-3) var(--size-4-3);
 	border-top: var(--border-width) solid var(--background-modifier-border);
@@ -176,6 +191,27 @@
 
 .desk-view .desk-item-preview > :last-child {
 	margin-bottom: 0;
+}
+
+/* Resizing: a strip along the inside of the bottom edge, which lights the edge up while in use. */
+
+.desk-view .desk-item-resize-handle {
+	position: absolute;
+	inset-inline: 0;
+	bottom: 0;
+	height: var(--size-4-2);
+	cursor: ns-resize;
+	/* A touch drag on the edge resizes the card instead of scrolling the pane. */
+	touch-action: none;
+}
+
+.desk-view .desk-item.is-collapsed > .desk-item-resize-handle {
+	display: none;
+}
+
+/* `:is()` counts as its most specific argument, so this also wins over a colored card's border. */
+.desk-view .desk-item:is(.is-resizing, :has(> .desk-item-resize-handle:hover)) {
+	border-bottom-color: var(--interactive-accent);
 }
 
 /*
