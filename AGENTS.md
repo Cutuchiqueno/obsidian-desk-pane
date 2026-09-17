@@ -78,7 +78,8 @@ npm run build
     - Optional: `author`, `authorUrl`, `fundingUrl` (string or map)
 - Never change `id` after release. Treat it as stable API.
 - Keep `minAppVersion` accurate when using newer APIs.
-- Canonical requirements are coded here: https://github.com/obsidianmd/obsidian-releases/blob/master/.github/workflows/validate-plugin-entry.yml
+- Canonical requirements: https://docs.obsidian.md/Plugins/Releasing/Submit+your+plugin (the
+  `validate-plugin-entry.yml` workflow that used to encode them no longer exists).
 
 ## Testing
 
@@ -106,8 +107,58 @@ npm run build
   leading `v` (the repo's `.npmrc` sets `tag-version-prefix=""` so `npm version` tags correctly).
 - Attach `manifest.json`, `main.js`, and `styles.css` (if present) to the release as individual
   assets. The `release.yml` workflow does this automatically on a tag push, as a draft release.
-- After the initial release, follow the process to add/update the plugin in the community catalog
-  as required.
+
+### Release runbook
+
+What 1.0.0 followed on 2026-09-17, including the parts that tripped it up.
+
+1. **Decide the version with the user**, and how far to go: local prep only, push `main`, or push
+   the tag as well. Pushing the tag publishes a build, so never do it unasked.
+2. **Pre-flight.** `npm run lint` (the `eslint-plugin-obsidianmd` recommended set is the same
+   ruleset the directory's automated review leans on) and `npm run build` must both pass. Check the
+   plugin is free of the things review flags: `innerHTML`/`outerHTML`/`insertAdjacentHTML`,
+   `console.*`, the global `app`, `vault.adapter`, `workspace.activeLeaf`, inline `el.style`.
+3. **Check the catalog** for an id, name, or repo clash, and that the id contains no "obsidian" —
+   the one hard naming rule:
+   ```bash
+   curl -sS https://raw.githubusercontent.com/obsidianmd/obsidian-releases/master/community-plugins.json
+   ```
+4. **Cut `CHANGELOG.md`** (see below) and stage it.
+5. **Bump.** `npm version <x.y.z>` refuses on a dirty tree, and the staged changelog counts as
+   dirty. Use `npm version <x.y.z> --no-git-tag-version`, then make one commit
+   (`chore: release x.y.z`) with the changelog, `manifest.json`, `versions.json`, `package.json`,
+   `package-lock.json`, and tag it with `git tag -a <x.y.z> -m "<x.y.z>"`.
+6. **Never leave an unreleased version in `versions.json`.** Obsidian resolves those to release
+   tags that don't exist.
+7. **Push `main` first, then the tag.** The tag push fires `release.yml`, which runs `npm ci`,
+   builds, attests, and opens a **draft** release with the three assets.
+8. **Verify from the CLI.** `gh` is not installed on this machine; use the public API. Draft
+   releases are invisible to unauthenticated requests, so verify the run and the attested build
+   hashes instead — an attestation for the local `sha256sum main.js` proves CI built the same bytes:
+   ```bash
+   curl -sS "https://api.github.com/repos/Cutuchiqueno/obsidian-desk-pane/actions/runs?per_page=3"
+   curl -sS "https://api.github.com/repos/Cutuchiqueno/obsidian-desk-pane/attestations/sha256:$(sha256sum main.js | cut -d' ' -f1)"
+   ```
+9. **Hand the rest to the user.** Publishing the draft is theirs to do: the workflow deliberately
+   leaves it a draft, its body is empty (paste the changelog's version section), and the directory
+   cannot see a draft.
+
+### Submitting to the community directory
+
+- Submission is **not** a pull request against `obsidian-releases` any more, and that repo's
+  `validate-plugin-entry.yml` is gone — don't cite it. The user signs in at
+  [community.obsidian.md](https://community.obsidian.md) with their Obsidian account, links their
+  GitHub account so it can verify repo ownership, and adds the plugin there.
+- The directory reads `manifest.json` at the HEAD of the default branch and needs a **published**
+  release whose tag matches that version, with `main.js`, `manifest.json`, and `styles.css`
+  attached. The repo must be public and have `README.md`, `LICENSE`, and `manifest.json` at its
+  root.
+- Review is automatic and its feedback is fixed by committing and publishing a **new release with a
+  bumped version**, never by editing the existing one.
+- Known review risk to raise before submitting: `tab-drag.ts` patches the private
+  `workspace.onDragLeaf` / `getDropLocation`, and `desk-drag.ts` uses the private `app.dragManager`.
+  Both are disclosed in the README's "Known limitations", but monkey-patching core methods is
+  something reviewers ask about.
 
 ### Changelog workflow
 
