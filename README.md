@@ -13,6 +13,10 @@ Open the pane with the ribbon icon or the **Desk Sidebar: Open pane** command, t
   as its own tab in the tab group you drop it on, and leaves the desk.
 - **Add a note without closing anything** — drag it from the File Explorer, drag link text into the
   pane, or run **Desk Sidebar: Add current note**.
+- **Add a note from its context menu** — right-click a note in the File Explorer, its tab, a link
+  to it, or the graph and select **Add to desk**, beside **Open in new window**. The note goes to
+  the top of the desk and stays open wherever it was; selecting several notes in the File Explorer
+  adds them all. Notes already on the desk don't show the entry, so it never reorders the desk.
 - **Reorder** — drag a note's title row up or down within the pane.
 - **Remove** — hover a note and select its **×** button, or right-click it and select **Remove from
   desk**.

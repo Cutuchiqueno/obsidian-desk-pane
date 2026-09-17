@@ -15,6 +15,10 @@
 - Only Markdown notes go on the desk. Other file types — Bases (`.base`), Canvas, PDFs, images —
   and folders are turned away on every route onto the desk, and a note renamed to another file type
   comes off it the way a deleted note does.
+- **Add to desk** in Obsidian's own note context menus — the File Explorer (one note or a
+  selection), a tab, a note's more-options menu, a link, the graph, Canvas, and Bases — next to
+  **Open in new window**. It puts the note at the top of the desk, opens the pane, and leaves the
+  note where it is; notes already on the desk don't show the entry.
 - Reorder notes by dragging them within the pane. The pointer turns into a hand over a card's
   title row to show that the card can be moved.
 - Fold a note down to its title, or unfold it to read a preview of the note in the pane, by
