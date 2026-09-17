@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+## 1.0.0 - 2026-09-17
+
+First public release.
+
 ### Added
 
 - Desk pane in the sidebar holding a manually curated, ordered list of notes, opened from the
@@ -56,4 +60,5 @@
   has a **×** to take it off all its notes, and **Remove all colors** clears every color after
   confirming. Hiding the list clears the color filter.
 
-[unreleased]: https://github.com/Cutuchiqueno/obsidian-desk-pane/compare/0.1.0...HEAD
+[unreleased]: https://github.com/Cutuchiqueno/obsidian-desk-pane/compare/1.0.0...HEAD
+[1.0.0]: https://github.com/Cutuchiqueno/obsidian-desk-pane/releases/tag/1.0.0
