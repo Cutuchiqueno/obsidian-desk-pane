@@ -22,6 +22,14 @@ export function isNotePath(path: string): boolean {
 	return path.toLowerCase().endsWith('.md');
 }
 
+/**
+ * How tall a card may grow, as a percentage of the pane's height — the **Maximum card height**
+ * setting. A card fits its note below that and scrolls its preview beyond it.
+ */
+export const CARD_HEIGHT_MIN = 20;
+export const CARD_HEIGHT_MAX = 100;
+export const CARD_HEIGHT_DEFAULT = 50;
+
 /** Obsidian's named theme colors, in the order grouping sorts them. */
 export const DESK_COLORS = ['red', 'orange', 'yellow', 'green', 'cyan', 'blue', 'purple', 'pink'] as const;
 
@@ -38,4 +46,4 @@ export interface DeskEntry {
 export type DeskChange =
 	| { type: 'add' | 'remove' | 'move' | 'fold' | 'color' | 'resize'; path: string }
 	| { type: 'rename'; oldPath: string; newPath: string }
-	| { type: 'fold-all' | 'clear' | 'uncolor' | 'group' };
+	| { type: 'fold-all' | 'clear' | 'uncolor' | 'group' | 'card-height' };

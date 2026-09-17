@@ -1,10 +1,12 @@
 /*
  * Themes and snippets can tune the desk through these variables, e.g.
  * `.desk-view { --desk-card-max-height: 80cqh; }`, where `cqh` is a percent of the pane's height.
+ * That still wins over the **Maximum card height** setting, which the pane puts in
+ * `--desk-card-height-setting`; 50cqh is the fallback for a pane that has yet to set it.
  */
 .desk-view {
 	--desk-card-gap: var(--size-4-2);
-	--desk-card-max-height: 50cqh;
+	--desk-card-max-height: var(--desk-card-height-setting, 50cqh);
 
 	/* Sizes `cqh` for the cards, so their cap follows the pane's height. */
 	container-type: size;

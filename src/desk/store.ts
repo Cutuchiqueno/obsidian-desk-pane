@@ -1,7 +1,13 @@
 import { Events } from 'obsidian';
 import type { EventRef } from 'obsidian';
 import type DeskPlugin from '../main';
-import { DESK_COLORS, isNotePath } from './types';
+import {
+	CARD_HEIGHT_DEFAULT,
+	CARD_HEIGHT_MAX,
+	CARD_HEIGHT_MIN,
+	DESK_COLORS,
+	isNotePath,
+} from './types';
 import type { DeskChange, DeskColor, DeskEntry } from './types';
 
 export class DeskStore extends Events {
@@ -19,6 +25,18 @@ export class DeskStore extends Events {
 
 	get groupedByColor(): boolean {
 		return this.plugin.settings.groupedByColor;
+	}
+
+	/** Percent of the pane's height; bounded here too, in case `data.json` was edited by hand. */
+	get cardMaxHeight(): number {
+		return bound(this.plugin.settings.cardMaxHeight);
+	}
+
+	setCardMaxHeight(percent: number): void {
+		const bounded = bound(percent);
+		if (bounded === this.plugin.settings.cardMaxHeight) return;
+		this.plugin.settings.cardMaxHeight = bounded;
+		this.commit({ type: 'card-height' });
 	}
 
 	indexOf(path: string): number {
@@ -165,6 +183,11 @@ export class DeskStore extends Events {
 		void this.plugin.saveData(this.plugin.settings);
 		this.trigger('changed', change);
 	}
+}
+
+function bound(percent: number): number {
+	if (!Number.isFinite(percent)) return CARD_HEIGHT_DEFAULT;
+	return Math.min(Math.max(Math.round(percent), CARD_HEIGHT_MIN), CARD_HEIGHT_MAX);
 }
 
 /** Palette order, with the notes that have no color last. */

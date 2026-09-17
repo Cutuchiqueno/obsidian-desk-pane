@@ -26,11 +26,13 @@
 - Commands **Add current note** and **Remove current note**, plus a right-click menu on each note
   with **Open note**, **Move up**, **Move down**, and **Remove from desk** — the way to use Desk Sidebar without a mouse,
   since drag and drop needs one.
-- Each note sits on its own card, which grows with its unfolded preview up to half the pane's
-  height and scrolls beyond that; a CSS snippet can change the cap through
+- Each note sits on its own card, which grows with its unfolded preview up to the **Maximum card
+  height** setting and scrolls beyond that; a CSS snippet can still override the cap through
   `--desk-card-max-height`.
-- Drag a card's bottom edge to make it shorter, or taller again up to its whole note or half the
-  pane's height. The card keeps that height across restarts and while it's folded, filtered, or
+- Setting **Maximum card height**, a slider from 20% to 100% of the pane's height (50% by default).
+  Open panes follow it as it moves.
+- Drag a card's bottom edge to make it shorter, or taller again up to its whole note or the maximum
+  card height. The card keeps that height across restarts and while it's folded, filtered, or
   grouped; dragging it all the way open, or **Reset height** in its right-click menu, fits it to
   its note again.
 - A **×** button on each note, shown on hover, to take it off the desk.

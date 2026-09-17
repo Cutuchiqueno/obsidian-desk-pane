@@ -21,12 +21,12 @@ Open the pane with the ribbon icon or the **Desk Sidebar: Open pane** command, t
 - **Remove** — hover a note and select its **×** button, or right-click it and select **Remove from
   desk**.
 - **Fold and unfold** — select a note's title to collapse it to its title, or expand it to read a
-  preview. A card grows with its preview up to half the pane's height; longer previews scroll
-  inside it.
-- **Resize a card** — drag its bottom edge up or down. A card never grows past its note or half the
-  pane's height. It keeps the height you drag it to, also while it's folded, filtered, or grouped;
-  drag it all the way open, or right-click it and select **Reset height**, to fit it to its note
-  again.
+  preview. A card grows with its preview up to the **Maximum card height** setting; longer previews
+  scroll inside it.
+- **Resize a card** — drag its bottom edge up or down. A card never grows past its note or the
+  **Maximum card height** setting. It keeps the height you drag it to, also while it's folded,
+  filtered, or grouped; drag it all the way open, or right-click it and select **Reset height**, to
+  fit it to its note again.
 - **Open a note** — right-click it and select **Open note**, or drag it into the editor area.
 - **Collapse all, expand all, clear the desk** — use the buttons at the top of the pane. Clearing
   asks first, and only takes the notes off the desk; they stay in your vault.
@@ -47,9 +47,14 @@ Open the pane with the ribbon icon or the **Desk Sidebar: Open pane** command, t
 
 The list, its fold states, card heights, colors, and grouping persist across restarts.
 
-To let cards grow taller or keep them shorter, set `--desk-card-max-height` in a CSS snippet, for
-example `.desk-view { --desk-card-max-height: 80cqh; }`, where `cqh` is a percent of the pane's
-height.
+### Settings
+
+- **Add new notes folded** — whether a note arrives showing only its title, or already unfolded.
+- **Maximum card height** — how tall a card may grow, as a share of the pane's height, from 20% to
+  100% (50% by default). Open panes follow the slider as you move it.
+
+A CSS snippet still overrides the setting, if you want a cap in other units:
+`.desk-view { --desk-card-max-height: 400px; }`.
 
 ### Known limitations
 

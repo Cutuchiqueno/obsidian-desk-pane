@@ -75,6 +75,7 @@ export class DeskView extends ItemView {
 			text: 'No notes match the filter.',
 		});
 		this.listEl = bodyEl.createDiv({ cls: 'desk-list' });
+		this.applyCardMaxHeight();
 
 		this.addChild(
 			new DeskDragController(this.app, this.contentEl, this.listEl, this.store, this.tabDrag),
@@ -165,6 +166,10 @@ export class DeskView extends ItemView {
 	}
 
 	private render(change?: DeskChange): void {
+		if (change?.type === 'card-height') {
+			this.applyCardMaxHeight();
+			return;
+		}
 		if (change?.type === 'rename') {
 			this.relabelRow(change.oldPath, change.newPath);
 			void this.applyFilter();
@@ -300,6 +305,14 @@ export class DeskView extends ItemView {
 	private pathFromEvent(event: Event): string | null {
 		if (!(event.target instanceof Element)) return null;
 		return event.target.closest<HTMLElement>('.desk-item')?.dataset.path ?? null;
+	}
+
+	/**
+	 * `cqh` is a percent of the pane's height. The stylesheet reads this through a fallback, so a
+	 * theme or snippet setting `--desk-card-max-height` still overrides the setting.
+	 */
+	private applyCardMaxHeight(): void {
+		this.contentEl.setCssProps({ '--desk-card-height-setting': `${this.store.cardMaxHeight}cqh` });
 	}
 
 	/** Anything that isn't a Markdown note counts as missing, so no card ever renders one. */
