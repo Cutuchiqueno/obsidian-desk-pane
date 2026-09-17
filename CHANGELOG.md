@@ -12,7 +12,8 @@
   desk.
 - Add notes without closing a tab by dragging them from the File Explorer, or by dragging link text
   into the pane.
-- Reorder notes by dragging them within the pane.
+- Reorder notes by dragging them within the pane. The pointer turns into a hand over a card's
+  title row to show that the card can be moved.
 - Fold a note down to its title, or unfold it to read a preview of the note in the pane, by
   selecting its title. Long titles wrap instead of being cut off.
 - Commands **Add current note** and **Remove current note**, plus a right-click menu on each note

@@ -105,7 +105,12 @@
 	align-items: flex-start;
 	gap: var(--size-4-1);
 	padding: var(--size-2-2);
-	cursor: var(--cursor);
+	/* An open hand over the title area, since the header is the card's drag handle. */
+	cursor: grab;
+}
+
+.desk-view .desk-item-header:active {
+	cursor: grabbing;
 }
 
 .desk-view .desk-item-header:hover {
