@@ -1,7 +1,7 @@
 import type { App } from 'obsidian';
 import type DeskPlugin from '../main';
 import type { DeskStore } from './store';
-import { DESK_ICON, VIEW_TYPE_DESK } from './types';
+import { DESK_ICON, isNoteFile, VIEW_TYPE_DESK } from './types';
 
 export async function activateDeskView(app: App): Promise<void> {
 	const existing = app.workspace.getLeavesOfType(VIEW_TYPE_DESK)[0];
@@ -27,7 +27,7 @@ export function registerDeskCommands(plugin: DeskPlugin, store: DeskStore): void
 		name: 'Add current note',
 		checkCallback: (checking) => {
 			const file = plugin.app.workspace.getActiveFile();
-			if (!file || file.extension !== 'md') return false;
+			if (!isNoteFile(file)) return false;
 			if (!checking) store.addOrMove(file.path, store.entries.length);
 			return true;
 		},

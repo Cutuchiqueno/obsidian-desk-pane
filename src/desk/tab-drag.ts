@@ -1,5 +1,6 @@
 import { MarkdownView } from 'obsidian';
 import type { Plugin, TFile, WorkspaceLeaf } from 'obsidian';
+import { isNoteFile } from './types';
 
 type OnDragLeaf = (evt: DragEvent, leaf: WorkspaceLeaf) => unknown;
 type GetDropLocation = (evt: DragEvent) => unknown;
@@ -33,7 +34,7 @@ export class TabDrag {
 	/** The note shown in the dragged tab, if it is a Markdown note. */
 	get note(): TFile | null {
 		const view = this.active?.leaf.view;
-		return view instanceof MarkdownView && view.file?.extension === 'md' ? view.file : null;
+		return view instanceof MarkdownView && isNoteFile(view.file) ? view.file : null;
 	}
 
 	/** Closes the dragged tab once Obsidian has finished handling the end of the drag. */

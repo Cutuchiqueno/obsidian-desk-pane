@@ -1,7 +1,7 @@
 import { Events } from 'obsidian';
 import type { EventRef } from 'obsidian';
 import type DeskPlugin from '../main';
-import { DESK_COLORS } from './types';
+import { DESK_COLORS, isNotePath } from './types';
 import type { DeskChange, DeskColor, DeskEntry } from './types';
 
 export class DeskStore extends Events {
@@ -29,7 +29,9 @@ export class DeskStore extends Events {
 		return this.indexOf(path) >= 0;
 	}
 
+	/** The only way a note joins the desk, so the Markdown-only rule is enforced here for all of them. */
 	addOrMove(path: string, targetIndex: number): void {
+		if (!isNotePath(path)) return;
 		const isNew = !this.has(path);
 		this.relocate(path, targetIndex, {
 			path,
@@ -84,6 +86,12 @@ export class DeskStore extends Events {
 	renamePath(oldPath: string, newPath: string): void {
 		const entry = this.entries[this.indexOf(oldPath)];
 		if (!entry) return;
+		// Renaming a note to another file type, e.g. `.md` to `.base`, leaves nothing to show on a
+		// card, so it comes off the desk the way a deleted note does.
+		if (!isNotePath(newPath)) {
+			this.removeByPath(oldPath);
+			return;
+		}
 		entry.path = newPath;
 		this.commit({ type: 'rename', oldPath, newPath });
 	}

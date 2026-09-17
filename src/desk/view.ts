@@ -1,5 +1,5 @@
-import { Component, ItemView, Keymap, MarkdownRenderer, Menu, setIcon, TFile } from 'obsidian';
-import type { WorkspaceLeaf } from 'obsidian';
+import { Component, ItemView, Keymap, MarkdownRenderer, Menu, setIcon } from 'obsidian';
+import type { TFile, WorkspaceLeaf } from 'obsidian';
 import { setColorAttr, showColorMenu } from './color';
 import { DeskDragController } from './desk-drag';
 import { DeskResizeController } from './desk-resize';
@@ -9,7 +9,7 @@ import type { DeskRow, GroupHeader } from './row';
 import type { DeskStore } from './store';
 import type { TabDrag } from './tab-drag';
 import { DeskToolbar } from './toolbar';
-import { DESK_ICON, VIEW_TYPE_DESK } from './types';
+import { DESK_ICON, isNoteFile, VIEW_TYPE_DESK } from './types';
 import type { DeskChange, DeskColor } from './types';
 
 interface MountedRow extends DeskRow {
@@ -302,8 +302,9 @@ export class DeskView extends ItemView {
 		return event.target.closest<HTMLElement>('.desk-item')?.dataset.path ?? null;
 	}
 
+	/** Anything that isn't a Markdown note counts as missing, so no card ever renders one. */
 	private fileForPath(path: string): TFile | null {
 		const file = this.app.vault.getFileByPath(path);
-		return file instanceof TFile ? file : null;
+		return isNoteFile(file) ? file : null;
 	}
 }

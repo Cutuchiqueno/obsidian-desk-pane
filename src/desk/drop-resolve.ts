@@ -1,5 +1,6 @@
-import { normalizePath, TFile } from 'obsidian';
-import type { App } from 'obsidian';
+import { normalizePath } from 'obsidian';
+import type { App, TFile } from 'obsidian';
+import { isNoteFile } from './types';
 
 /**
  * Turns the payload of a drag that came from outside the Desk list into the Markdown notes it
@@ -70,5 +71,5 @@ function resolveLinkText(linktext: string, app: App): TFile | null {
 }
 
 function asMarkdownFile(file: TFile | null): TFile | null {
-	return file instanceof TFile && file.extension === 'md' ? file : null;
+	return isNoteFile(file) ? file : null;
 }
