@@ -11,6 +11,7 @@ export interface DeskRow {
 export interface GroupHeader {
 	el: HTMLElement;
 	countEl: HTMLElement;
+	foldEl: HTMLElement;
 }
 
 /** A card per note: a header to fold, open, drag, color, or remove it, and its preview below. */
@@ -51,7 +52,14 @@ export function createGroupHeader(color: DeskColor | undefined): GroupHeader {
 	createSwatch(el);
 	el.createSpan({ cls: 'desk-group-title', text: colorLabel(color) });
 	const countEl = el.createSpan({ cls: 'desk-group-count' });
-	return { el, countEl };
+	const foldEl = el.createDiv({ cls: 'clickable-icon desk-group-fold' });
+	return { el, countEl, foldEl };
+}
+
+/** Same icons and wording as the toolbar's button, for just the notes of one group. */
+export function setGroupFoldButton(foldEl: HTMLElement, anyUnfolded: boolean): void {
+	setIcon(foldEl, anyUnfolded ? 'chevrons-down-up' : 'chevrons-up-down');
+	foldEl.setAttr('aria-label', anyUnfolded ? 'Collapse all in group' : 'Expand all in group');
 }
 
 export function setRowTitle(row: DeskRow, path: string, exists: boolean): void {

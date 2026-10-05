@@ -89,10 +89,15 @@ export class DeskStore extends Events {
 	}
 
 	setAllFolded(collapsed: boolean): void {
-		const changed = this.entries.filter((entry) => entry.collapsed !== collapsed);
-		if (changed.length === 0) return;
-		for (const entry of changed) entry.collapsed = collapsed;
-		this.commit({ type: 'fold-all' });
+		this.setFolded(this.entries, collapsed);
+	}
+
+	/** Folds or unfolds the notes of one color, the block a group header heads while grouped. */
+	setColorFolded(color: DeskColor | undefined, collapsed: boolean): void {
+		this.setFolded(
+			this.entries.filter((entry) => entry.color === color),
+			collapsed,
+		);
 	}
 
 	clear(): void {
@@ -145,6 +150,13 @@ export class DeskStore extends Events {
 		this.plugin.settings.groupedByColor = grouped;
 		this.regroup();
 		this.commit({ type: 'group' });
+	}
+
+	private setFolded(entries: DeskEntry[], collapsed: boolean): void {
+		const changed = entries.filter((entry) => entry.collapsed !== collapsed);
+		if (changed.length === 0) return;
+		for (const entry of changed) entry.collapsed = collapsed;
+		this.commit({ type: 'fold-all' });
 	}
 
 	private uncolor(matches: (entry: DeskEntry) => boolean): void {

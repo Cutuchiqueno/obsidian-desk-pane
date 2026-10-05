@@ -39,7 +39,8 @@ Open the pane with the ribbon icon or the **Desk Sidebar: Open pane** command, t
   Toggle grouping by color**, to sort the notes into one block per color under headers. Notes
   without a color come last. Changing a note's color while grouped moves it to its new block;
   dragging a note out of its block ends the grouping. Select the button again to remove the headers
-  and keep the order.
+  and keep the order. Hover a header and select its button to collapse or expand all notes in that
+  group.
 - **Filter by color** — select the palette button at the top of the pane to list the colors in use
   with their note counts. Select colors to show only their notes; this combines with the search
   filter. Select a color's **×** to take that color off all its notes, or **Remove all colors** to

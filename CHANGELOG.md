@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+### Added
+
+- While the desk is grouped by color, each group header has a button, shown on hover, to
+  **Collapse all in group** or **Expand all in group**.
+
 ## 1.0.0 - 2026-09-17
 
 First public release.

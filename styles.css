@@ -344,6 +344,19 @@
 	font-weight: var(--font-normal);
 }
 
+/* Hidden until the header is hovered, like a card's buttons; always shown where there is no hover. */
+.desk-view .desk-group-fold {
+	padding: var(--size-2-1);
+	opacity: 0;
+	--icon-size: var(--icon-xs);
+}
+
+.desk-view .desk-group-header:hover .desk-group-fold,
+.desk-view .desk-group-fold:focus-visible,
+.is-mobile .desk-view .desk-group-fold {
+	opacity: 1;
+}
+
 /* Color filter, listed like tags in the Tags pane */
 
 .desk-view .desk-color-filter {

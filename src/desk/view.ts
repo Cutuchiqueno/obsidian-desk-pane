@@ -4,7 +4,13 @@ import { setColorAttr, showColorMenu } from './color';
 import { DeskDragController } from './desk-drag';
 import { DeskResizeController } from './desk-resize';
 import { noteMatchesFilter } from './filter';
-import { createGroupHeader, createRow, setPreviewHeight, setRowTitle } from './row';
+import {
+	createGroupHeader,
+	createRow,
+	setGroupFoldButton,
+	setPreviewHeight,
+	setRowTitle,
+} from './row';
 import type { DeskRow, GroupHeader } from './row';
 import type { DeskStore } from './store';
 import type { TabDrag } from './tab-drag';
@@ -100,9 +106,15 @@ export class DeskView extends ItemView {
 	}
 
 	private onClick(event: MouseEvent): void {
+		const target = event.target instanceof Element ? event.target : null;
+		const foldEl = target?.closest('.desk-group-fold');
+		const group = foldEl && this.groups.find((candidate) => candidate.foldEl === foldEl);
+		if (group) {
+			this.store.setColorFolded(group.color, anyUnfolded(group));
+			return;
+		}
 		const path = this.pathFromEvent(event);
 		if (!path) return;
-		const target = event.target instanceof Element ? event.target : null;
 		if (target?.closest('.desk-item-remove')) {
 			this.store.removeByPath(path);
 		} else if (target?.closest('.desk-item-color')) {
@@ -213,6 +225,7 @@ export class DeskView extends ItemView {
 			row.el.remove();
 			this.rows.delete(path);
 		}
+		for (const group of this.groups) setGroupFoldButton(group.foldEl, anyUnfolded(group));
 		this.syncGroups();
 		void this.applyFilter();
 	}
@@ -320,4 +333,9 @@ export class DeskView extends ItemView {
 		const file = this.app.vault.getFileByPath(path);
 		return isNoteFile(file) ? file : null;
 	}
+}
+
+/** Counts the notes the filters hide too, as the toolbar's **Collapse all** does. */
+function anyUnfolded(group: MountedGroup): boolean {
+	return group.rows.some((row) => !row.el.hasClass('is-collapsed'));
 }
