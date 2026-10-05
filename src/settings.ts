@@ -2,12 +2,13 @@ import { App, PluginSettingTab } from 'obsidian';
 import type { SettingDefinitionItem } from 'obsidian';
 import type DeskPlugin from './main';
 import { CARD_HEIGHT_DEFAULT, CARD_HEIGHT_MAX, CARD_HEIGHT_MIN } from './desk/types';
-import type { DeskEntry } from './desk/types';
+import type { DeskEntry, GroupNames } from './desk/types';
 
 export interface DeskSettings {
 	entries: DeskEntry[];
 	defaultFolded: boolean;
 	groupedByColor: boolean;
+	groupNames: GroupNames;
 	/** Percent of the pane's height a card may grow to. */
 	cardMaxHeight: number;
 }
@@ -16,6 +17,7 @@ export const DEFAULT_SETTINGS: DeskSettings = {
 	entries: [],
 	defaultFolded: true,
 	groupedByColor: false,
+	groupNames: {},
 	cardMaxHeight: CARD_HEIGHT_DEFAULT,
 };
 

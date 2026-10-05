@@ -338,6 +338,26 @@
 	display: none;
 }
 
+/* Selecting the name swaps it for a field to rename the group in. */
+.desk-view .desk-group-title {
+	min-width: 0;
+	overflow-wrap: anywhere;
+	cursor: text;
+}
+
+/*
+ * The field a group's name turns into, in its header or the color filter: as compact as the name,
+ * with its text starting where the name's did.
+ */
+.desk-view .desk-name-input {
+	flex: 1 1 auto;
+	min-width: 0;
+	height: auto;
+	margin-inline-start: calc(-1 * (var(--size-2-2) + var(--input-border-width)));
+	padding: 0 var(--size-2-2);
+	font: inherit;
+}
+
 .desk-view .desk-group-count {
 	margin-inline-start: auto;
 	color: var(--text-faint);
@@ -384,13 +404,34 @@
 	--icon-size: var(--icon-s);
 }
 
+/* Keeps the count off the buttons beside it. */
+.desk-view .desk-color-filter .tree-item-flair {
+	margin-inline-end: var(--size-4-1);
+}
+
+.desk-view .desk-color-filter-rename,
 .desk-view .desk-color-filter-clear {
 	padding: var(--size-2-1);
 	opacity: 0;
 }
 
+/*
+ * The pencil fills 20 of its icon's 24 units where the cross beside it fills 12, so it is drawn
+ * smaller to look as big, with its stroke widened by as much to look as thick, and padded out to a
+ * button the size of the cross's.
+ */
+.desk-view .desk-color-filter-rename {
+	--desk-pencil-scale: 0.6875;
+	--icon-size: calc(var(--icon-m) * var(--desk-pencil-scale));
+	--icon-stroke: calc(var(--icon-m-stroke-width) / var(--desk-pencil-scale));
+	padding: calc(var(--size-2-1) + (var(--icon-m) - var(--icon-size)) / 2);
+}
+
+.desk-view .desk-color-filter-item:hover .desk-color-filter-rename,
 .desk-view .desk-color-filter-item:hover .desk-color-filter-clear,
+.desk-view .desk-color-filter-rename:focus-visible,
 .desk-view .desk-color-filter-clear:focus-visible,
+.is-mobile .desk-view .desk-color-filter-rename,
 .is-mobile .desk-view .desk-color-filter-clear {
 	opacity: 1;
 }

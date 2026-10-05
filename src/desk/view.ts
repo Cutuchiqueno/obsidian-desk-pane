@@ -1,6 +1,6 @@
 import { Component, ItemView, Keymap, MarkdownRenderer, Menu, setIcon } from 'obsidian';
 import type { TFile, WorkspaceLeaf } from 'obsidian';
-import { setColorAttr, showColorMenu } from './color';
+import { editColorName, setColorAttr, showColorMenu } from './color';
 import { DeskDragController } from './desk-drag';
 import { DeskResizeController } from './desk-resize';
 import { noteMatchesFilter } from './filter';
@@ -107,10 +107,16 @@ export class DeskView extends ItemView {
 
 	private onClick(event: MouseEvent): void {
 		const target = event.target instanceof Element ? event.target : null;
-		const foldEl = target?.closest('.desk-group-fold');
-		const group = foldEl && this.groups.find((candidate) => candidate.foldEl === foldEl);
+		const headerEl = target?.closest('.desk-group-header');
+		const group = headerEl && this.groups.find((candidate) => candidate.el === headerEl);
 		if (group) {
-			this.store.setColorFolded(group.color, anyUnfolded(group));
+			if (target?.closest('.desk-group-fold')) {
+				this.store.setColorFolded(group.color, anyUnfolded(group));
+			} else if (target?.closest('.desk-group-title')) {
+				editColorName(group.titleEl, group.color, (name) =>
+					this.store.setGroupName(group.color, name),
+				);
+			}
 			return;
 		}
 		const path = this.pathFromEvent(event);
@@ -119,7 +125,12 @@ export class DeskView extends ItemView {
 			this.store.removeByPath(path);
 		} else if (target?.closest('.desk-item-color')) {
 			const current = this.store.entries[this.store.indexOf(path)]?.color;
-			showColorMenu(event, current, (color) => this.store.setColor(path, color));
+			showColorMenu(
+				event,
+				current,
+				(color) => this.store.labelOf(color),
+				(color) => this.store.setColor(path, color),
+			);
 		} else if (target?.closest('.desk-item-header')) {
 			// Clicks inside a preview are left alone, for selecting text and following links.
 			this.store.toggleFold(path);
@@ -204,7 +215,11 @@ export class DeskView extends ItemView {
 			listed.add(entry.path);
 			const row = this.rows.get(entry.path) ?? this.mountRow(entry.path);
 			if (grouped && (!group || group.color !== entry.color)) {
-				group = { ...createGroupHeader(entry.color), color: entry.color, rows: [] };
+				group = {
+					...createGroupHeader(entry.color, this.store.labelOf(entry.color)),
+					color: entry.color,
+					rows: [],
+				};
 				this.groups.push(group);
 				this.listEl.insertBefore(group.el, cursor);
 			}

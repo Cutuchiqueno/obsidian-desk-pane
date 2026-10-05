@@ -1,6 +1,6 @@
 import { setIcon } from 'obsidian';
 import type { App } from 'obsidian';
-import { colorLabel, createSwatch, setColorAttr } from './color';
+import { createSwatch, editColorName, setColorAttr } from './color';
 import { ConfirmUncolorModal } from './confirm-uncolor';
 import type { DeskStore } from './store';
 import { DESK_COLORS } from './types';
@@ -8,7 +8,8 @@ import type { DeskColor } from './types';
 
 /**
  * The panel below the toolbar listing the colors in use with their note counts, like tags in the
- * Tags pane. Selecting colors shows only their notes; the buttons take colors off the notes.
+ * Tags pane. Selecting colors shows only their notes; the buttons rename a color's group or take
+ * colors off the notes.
  */
 export class ColorFilter {
 	readonly el: HTMLElement;
@@ -45,11 +46,16 @@ export class ColorFilter {
 
 	onClick(event: MouseEvent): void {
 		const target = event.target instanceof Element ? event.target : null;
+		// Clicking into a name being edited, to place the caret, mustn't select its color too.
+		if (target?.closest('.desk-name-input')) return;
 		const itemEl = target?.closest<HTMLElement>('.desk-color-filter-item');
 		const color = DESK_COLORS.find((key) => key === itemEl?.dataset.deskColor);
+		const nameEl = itemEl?.querySelector<HTMLElement>('.tree-item-inner');
 		if (target?.closest('.desk-color-filter-clear-all')) {
 			const count = Array.from(this.counts.values()).reduce((sum, n) => sum + n, 0);
 			new ConfirmUncolorModal(this.app, count, () => this.store.clearAllColors()).open();
+		} else if (color && nameEl && target?.closest('.desk-color-filter-rename')) {
+			editColorName(nameEl, color, (name) => this.store.setGroupName(color, name));
 		} else if (color && target?.closest('.desk-color-filter-clear')) {
 			this.store.clearColor(color);
 		} else if (color) {
@@ -70,12 +76,18 @@ export class ColorFilter {
 			setColorAttr(itemEl, color);
 			itemEl.toggleClass('is-active', this.selected.has(color));
 			createSwatch(itemEl);
-			itemEl.createDiv({ cls: 'tree-item-inner', text: colorLabel(color) });
+			itemEl.createDiv({ cls: 'tree-item-inner', text: this.store.labelOf(color) });
 			const flairEl = itemEl.createDiv({ cls: 'tree-item-flair-outer' });
 			flairEl.createSpan({ cls: 'tree-item-flair', text: String(count) });
+			// A button rather than selecting the name, which already selects the color.
+			const renameEl = flairEl.createDiv({
+				cls: 'clickable-icon desk-color-filter-rename',
+				attr: { 'aria-label': 'Rename' },
+			});
+			setIcon(renameEl, 'pencil');
 			const clearEl = flairEl.createDiv({
 				cls: 'clickable-icon desk-color-filter-clear',
-				attr: { 'aria-label': `Remove ${color} from notes` },
+				attr: { 'aria-label': `Remove ${this.store.groupName(color) ?? color} from notes` },
 			});
 			setIcon(clearEl, 'x');
 		}

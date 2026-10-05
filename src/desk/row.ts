@@ -1,5 +1,5 @@
 import { setIcon } from 'obsidian';
-import { colorLabel, createSwatch, setColorAttr } from './color';
+import { createSwatch, setColorAttr } from './color';
 import type { DeskColor } from './types';
 
 export interface DeskRow {
@@ -10,6 +10,7 @@ export interface DeskRow {
 
 export interface GroupHeader {
 	el: HTMLElement;
+	titleEl: HTMLElement;
 	countEl: HTMLElement;
 	foldEl: HTMLElement;
 }
@@ -46,14 +47,14 @@ export function setPreviewHeight(previewEl: HTMLElement, height: number | undefi
 }
 
 /** Heads a block of same-colored notes while the desk is grouped by color. */
-export function createGroupHeader(color: DeskColor | undefined): GroupHeader {
+export function createGroupHeader(color: DeskColor | undefined, label: string): GroupHeader {
 	const el = createDiv({ cls: 'desk-group-header' });
 	setColorAttr(el, color);
 	createSwatch(el);
-	el.createSpan({ cls: 'desk-group-title', text: colorLabel(color) });
+	const titleEl = el.createSpan({ cls: 'desk-group-title', text: label });
 	const countEl = el.createSpan({ cls: 'desk-group-count' });
 	const foldEl = el.createDiv({ cls: 'clickable-icon desk-group-fold' });
-	return { el, countEl, foldEl };
+	return { el, titleEl, countEl, foldEl };
 }
 
 /** Same icons and wording as the toolbar's button, for just the notes of one group. */

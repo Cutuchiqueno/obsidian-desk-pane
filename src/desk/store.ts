@@ -1,6 +1,7 @@
 import { Events } from 'obsidian';
 import type { EventRef } from 'obsidian';
 import type DeskPlugin from '../main';
+import { colorLabel } from './color';
 import {
 	CARD_HEIGHT_DEFAULT,
 	CARD_HEIGHT_MAX,
@@ -8,7 +9,7 @@ import {
 	DESK_COLORS,
 	isNotePath,
 } from './types';
-import type { DeskChange, DeskColor, DeskEntry } from './types';
+import type { DeskChange, DeskColor, DeskEntry, GroupNames } from './types';
 
 export class DeskStore extends Events {
 	constructor(private plugin: DeskPlugin) {
@@ -150,6 +151,32 @@ export class DeskStore extends Events {
 		this.plugin.settings.groupedByColor = grouped;
 		this.regroup();
 		this.commit({ type: 'group' });
+	}
+
+	/** The name a group was given, if any. */
+	groupName(color: DeskColor | undefined): string | undefined {
+		return this.plugin.settings.groupNames[color ?? 'none'];
+	}
+
+	/** What the pane calls a color everywhere: its group's name, or else the color's own. */
+	labelOf(color: DeskColor | undefined): string {
+		return this.groupName(color) ?? colorLabel(color);
+	}
+
+	/**
+	 * An empty name gives the group its color's name back. Names stay with their color, so a group
+	 * that empties out has its name again when a note of that color returns.
+	 */
+	setGroupName(color: DeskColor | undefined, name: string): void {
+		const trimmed = name.trim();
+		if (trimmed === (this.groupName(color) ?? '')) return;
+		// A copy rather than an edit, so the `{}` in the defaults is never written to.
+		const names: GroupNames = { ...this.plugin.settings.groupNames };
+		const key = color ?? 'none';
+		if (trimmed) names[key] = trimmed;
+		else delete names[key];
+		this.plugin.settings.groupNames = names;
+		this.commit({ type: 'group-name' });
 	}
 
 	private setFolded(entries: DeskEntry[], collapsed: boolean): void {

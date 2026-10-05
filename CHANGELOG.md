@@ -6,6 +6,9 @@
 
 - While the desk is grouped by color, each group header has a button, shown on hover, to
   **Collapse all in group** or **Expand all in group**.
+- Select a group's name to rename it, or hover a color in the color filter and select its pencil
+  button, then press Enter to keep the new name. The color menu and the color filter list the color
+  under that name too. Clear the name to go back to the color's.
 
 ## 1.0.0 - 2026-09-17
 

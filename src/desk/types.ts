@@ -35,6 +35,9 @@ export const DESK_COLORS = ['red', 'orange', 'yellow', 'green', 'cyan', 'blue', 
 
 export type DeskColor = (typeof DESK_COLORS)[number];
 
+/** Names given to groups, by their color, or `none` for the notes without one. */
+export type GroupNames = Partial<Record<DeskColor | 'none', string>>;
+
 export interface DeskEntry {
 	path: string;
 	collapsed: boolean;
@@ -46,4 +49,4 @@ export interface DeskEntry {
 export type DeskChange =
 	| { type: 'add' | 'remove' | 'move' | 'fold' | 'color' | 'resize'; path: string }
 	| { type: 'rename'; oldPath: string; newPath: string }
-	| { type: 'fold-all' | 'clear' | 'uncolor' | 'group' | 'card-height' };
+	| { type: 'fold-all' | 'clear' | 'uncolor' | 'group' | 'group-name' | 'card-height' };
