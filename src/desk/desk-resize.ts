@@ -26,6 +26,8 @@ interface EdgeDrag {
  */
 export class DeskResizeController extends Component {
 	private drag: EdgeDrag | null = null;
+	/** The card whose edge the pointer is over, marked so the stylesheet can light its edge up. */
+	private hoverEl: HTMLElement | null = null;
 
 	constructor(
 		private readonly listEl: HTMLElement,
@@ -40,6 +42,25 @@ export class DeskResizeController extends Component {
 		this.registerDomEvent(this.listEl, 'pointermove', (evt) => this.onPointerMove(evt));
 		this.registerDomEvent(this.listEl, 'pointerup', (evt) => this.onPointerEnd(evt));
 		this.registerDomEvent(this.listEl, 'pointercancel', (evt) => this.onPointerEnd(evt));
+		// `pointerover` fires for every element the pointer enters, so moving off the handle onto the
+		// card clears the mark; leaving the list altogether sends no `pointerover`, hence the second.
+		this.registerDomEvent(this.listEl, 'pointerover', (evt) => this.setHover(evt.target));
+		this.registerDomEvent(this.listEl, 'pointerleave', () => this.setHover(null));
+	}
+
+	override onunload(): void {
+		this.setHover(null);
+	}
+
+	/** Marks the card whose resize handle is under `target`, if any, and unmarks the last one. */
+	private setHover(target: EventTarget | null): void {
+		const handleEl =
+			target instanceof Element ? target.closest('.desk-item-resize-handle') : null;
+		const cardEl = handleEl?.closest<HTMLElement>('.desk-item') ?? null;
+		if (cardEl === this.hoverEl) return;
+		this.hoverEl?.removeClass('is-resize-hover');
+		this.hoverEl = cardEl;
+		cardEl?.addClass('is-resize-hover');
 	}
 
 	private onPointerDown(evt: PointerEvent): void {

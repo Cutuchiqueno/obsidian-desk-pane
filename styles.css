@@ -216,10 +216,7 @@
 	display: none;
 }
 
-/* `:is()` counts as its most specific argument, so this also wins over a colored card's border. */
-.desk-view .desk-item:is(.is-resizing, :has(> .desk-item-resize-handle:hover)) {
-	border-bottom-color: var(--interactive-accent);
-}
+/* The lit-up edge itself is further down: it has to come after a colored card's border. */
 
 /*
  * Sits in the gap between cards during a drag. Its negative margins cancel out its own height and
@@ -309,6 +306,16 @@
 .desk-view .desk-item[data-desk-color] {
 	border-color: color-mix(in oklch, var(--desk-color) 70%, transparent);
 	background-color: color-mix(in srgb, var(--desk-color) 7%, var(--background-primary));
+}
+
+/*
+ * The bottom edge lights up while it is hovered or dragged. `is-resize-hover` is set by the resize
+ * controller rather than matched with `:has()`, which invalidates far too broadly to be worth it.
+ * Placed here, after the rule above, because it is no more specific than a colored card's border.
+ */
+.desk-view .desk-item.is-resizing,
+.desk-view .desk-item.is-resize-hover {
+	border-bottom-color: var(--interactive-accent);
 }
 
 /* Group headers */
