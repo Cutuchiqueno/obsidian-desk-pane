@@ -110,7 +110,8 @@ npm run build
 
 ### Release runbook
 
-What 1.0.0 followed on 2026-09-17, including the parts that tripped it up.
+What 1.0.0 followed on 2026-09-17, including the parts that tripped it up; 1.1.0 (2026-10-05)
+added the `gh` steps.
 
 1. **Decide the version with the user**, and how far to go: local prep only, push `main`, or push
    the tag as well. Pushing the tag publishes a build, so never do it unasked.
@@ -132,16 +133,22 @@ What 1.0.0 followed on 2026-09-17, including the parts that tripped it up.
    tags that don't exist.
 7. **Push `main` first, then the tag.** The tag push fires `release.yml`, which runs `npm ci`,
    builds, attests, and opens a **draft** release with the three assets.
-8. **Verify from the CLI.** `gh` is not installed on this machine; use the public API. Draft
-   releases are invisible to unauthenticated requests, so verify the run and the attested build
-   hashes instead — an attestation for the local `sha256sum main.js` proves CI built the same bytes:
+8. **Verify with `gh`** (installed and logged in since 1.1.0; it sees drafts). Watch the run, then
+   check the draft's asset digests against the local `sha256sum main.js manifest.json styles.css`
+   and that the attestations hold — that proves CI built the same bytes from the tagged commit:
    ```bash
-   curl -sS "https://api.github.com/repos/Cutuchiqueno/obsidian-desk-pane/actions/runs?per_page=3"
-   curl -sS "https://api.github.com/repos/Cutuchiqueno/obsidian-desk-pane/attestations/sha256:$(sha256sum main.js | cut -d' ' -f1)"
+   gh run watch <run-id> --exit-status
+   gh release view <x.y.z> --json isDraft,assets --jq '{isDraft, assets: [.assets[] | {name, digest}]}'
+   gh attestation verify main.js -R Cutuchiqueno/obsidian-desk-pane
    ```
-9. **Hand the rest to the user.** Publishing the draft is theirs to do: the workflow deliberately
-   leaves it a draft, its body is empty (paste the changelog's version section), and the directory
-   cannot see a draft.
+9. **Fill in the draft's notes.** The workflow leaves the body empty; give it the changelog's version
+   section, heading included, as 1.0.0 had, and keep it a draft:
+   ```bash
+   awk '/^## <x.y.z> /{on=1} /^## <previous> /{on=0} on' CHANGELOG.md > notes.md
+   gh release edit <x.y.z> --notes-file notes.md --draft=true
+   ```
+10. **Hand the rest to the user.** Publishing the draft is theirs to do: the workflow deliberately
+    leaves it a draft, and the directory cannot see a draft.
 
 ### Submitting to the community directory
 
