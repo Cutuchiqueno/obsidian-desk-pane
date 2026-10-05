@@ -1,6 +1,6 @@
 {
 	"name": "obsidian-desk-pane",
-	"version": "1.0.0",
+	"version": "1.1.0",
 	"description": "A pane in the sidebar where you can put notes temporarily while you are writing in your current note of focus.",
 	"main": "main.js",
 	"type": "module",

@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 1.1.0 - 2026-10-05
+
 ### Added
 
 - While the desk is grouped by color, each group header has a button, shown on hover, to
@@ -68,5 +70,6 @@ First public release.
   has a **×** to take it off all its notes, and **Remove all colors** clears every color after
   confirming. Hiding the list clears the color filter.
 
-[unreleased]: https://github.com/Cutuchiqueno/obsidian-desk-pane/compare/1.0.0...HEAD
+[unreleased]: https://github.com/Cutuchiqueno/obsidian-desk-pane/compare/1.1.0...HEAD
+[1.1.0]: https://github.com/Cutuchiqueno/obsidian-desk-pane/compare/1.0.0...1.1.0
 [1.0.0]: https://github.com/Cutuchiqueno/obsidian-desk-pane/releases/tag/1.0.0
