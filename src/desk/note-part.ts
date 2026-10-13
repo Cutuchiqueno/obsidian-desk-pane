@@ -3,7 +3,7 @@ import type { App, BlockSubpathResult, HeadingSubpathResult, OpenViewState, TFil
 import type { DeskTarget } from './types';
 
 /** Up to this many characters of a block's first line name its card. */
-const BLOCK_TITLE_LENGTH = 60;
+const BLOCK_TITLE_LENGTH = 30;
 
 /** A block ID at the end of a line, as `^id` with letters, digits, and dashes. */
 const BLOCK_ID_AT_END = /\s*\^[A-Za-z0-9-]+\s*$/;
