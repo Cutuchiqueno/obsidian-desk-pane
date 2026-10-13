@@ -157,6 +157,21 @@
 	text-decoration: line-through;
 }
 
+/* The heading or block a card shows, under its note's name. */
+.desk-view .desk-item-part {
+	color: var(--text-muted);
+	font-weight: var(--font-normal);
+}
+
+.desk-view .desk-item.desk-item-missing .desk-item-part {
+	color: inherit;
+}
+
+.desk-view .desk-item-part-missing {
+	color: var(--text-faint);
+	font-size: var(--font-ui-small);
+}
+
 /* Hidden until the card is hovered or focused; always shown where there is no hover. */
 .desk-view .desk-item-color,
 .desk-view .desk-item-remove {

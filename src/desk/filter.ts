@@ -1,12 +1,21 @@
 import type { App } from 'obsidian';
+import { readTargetMarkdown } from './note-part';
 import { basename } from './row';
+import type { DeskTarget } from './types';
 
-/** Whether a desk note's title or text contains `query`, ignoring case. */
-export async function noteMatchesFilter(app: App, path: string, query: string): Promise<boolean> {
+/**
+ * Whether a card's note title or text contains `query`, ignoring case. A heading's or block's card
+ * matches only on the text it shows.
+ */
+export async function targetMatchesFilter(
+	app: App,
+	target: DeskTarget,
+	query: string,
+): Promise<boolean> {
 	const needle = query.toLowerCase();
-	if (basename(path).toLowerCase().includes(needle)) return true;
-	const file = app.vault.getFileByPath(path);
+	if (basename(target.path).toLowerCase().includes(needle)) return true;
+	const file = app.vault.getFileByPath(target.path);
 	if (!file) return false;
-	const text = await app.vault.cachedRead(file);
-	return text.toLowerCase().includes(needle);
+	const text = await readTargetMarkdown(app, file, target.subpath);
+	return text?.toLowerCase().includes(needle) ?? false;
 }

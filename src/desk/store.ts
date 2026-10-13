@@ -7,9 +7,10 @@ import {
 	CARD_HEIGHT_MAX,
 	CARD_HEIGHT_MIN,
 	DESK_COLORS,
+	entryKey,
 	isNotePath,
 } from './types';
-import type { DeskChange, DeskColor, DeskEntry, GroupNames } from './types';
+import type { DeskChange, DeskColor, DeskEntry, DeskTarget, GroupNames } from './types';
 
 export class DeskStore extends Events {
 	constructor(private plugin: DeskPlugin) {
@@ -45,23 +46,41 @@ export class DeskStore extends Events {
 		this.commit({ type: 'card-height' });
 	}
 
-	indexOf(path: string): number {
-		return this.entries.findIndex((entry) => entry.path === path);
+	/** Cards are looked up by `entryKey`, which for a whole note is just its path. */
+	indexOf(key: string): number {
+		return this.entries.findIndex((entry) => entryKey(entry) === key);
 	}
 
-	has(path: string): boolean {
-		return this.indexOf(path) >= 0;
+	has(key: string): boolean {
+		return this.indexOf(key) >= 0;
+	}
+
+	get(key: string): DeskEntry | undefined {
+		return this.entries[this.indexOf(key)];
 	}
 
 	/**
-	 * Every note joins the desk through here or `addAllOnTop`, so the Markdown-only rule is enforced
+	 * Every card joins the desk through here or `addAllOnTop`, so the Markdown-only rule is enforced
 	 * in these two for all of them.
 	 */
-	addOrMove(path: string, targetIndex: number, collapsed = this.plugin.settings.defaultFolded): void {
+	addOrMove(
+		target: DeskTarget,
+		targetIndex: number,
+		collapsed = this.plugin.settings.defaultFolded,
+	): void {
+		const { path } = target;
 		if (!isNotePath(path)) return;
-		const isNew = !this.has(path);
-		this.relocate(path, targetIndex, { path, collapsed });
-		this.commit({ type: isNew ? 'add' : 'move', path });
+		// An empty subpath is the whole note; `saveData` leaves an undefined one out of `data.json`.
+		const entry: DeskEntry = { path, subpath: target.subpath || undefined, collapsed };
+		const key = entryKey(entry);
+		const isNew = !this.has(key);
+		this.relocate(key, targetIndex, entry);
+		this.commit({ type: isNew ? 'add' : 'move', key });
+	}
+
+	/** On top, where a new card without a color belongs. */
+	addOnTop(target: DeskTarget): void {
+		this.addOrMove(target, this.topIndex());
 	}
 
 	/**
@@ -69,7 +88,7 @@ export class DeskStore extends Events {
 	 * goes on top, where a new note without a color belongs.
 	 */
 	addCreated(path: string): void {
-		this.addOrMove(path, this.topIndex(), true);
+		this.addOrMove({ path }, this.topIndex(), true);
 	}
 
 	/**
@@ -77,7 +96,7 @@ export class DeskStore extends Events {
 	 * the desk keep their place. Returns how many were added.
 	 */
 	addAllOnTop(paths: string[]): number {
-		const onDesk = new Set(this.entries.map((entry) => entry.path));
+		const onDesk = new Set(this.entries.map(entryKey));
 		const collapsed = this.plugin.settings.defaultFolded;
 		const added = paths
 			.filter((path) => isNotePath(path) && !onDesk.has(path))
@@ -88,34 +107,42 @@ export class DeskStore extends Events {
 		return added.length;
 	}
 
-	move(path: string, targetIndex: number): void {
-		if (!this.has(path)) return;
-		this.relocate(path, targetIndex);
-		this.commit({ type: 'move', path });
+	move(key: string, targetIndex: number): void {
+		if (!this.has(key)) return;
+		this.relocate(key, targetIndex);
+		this.commit({ type: 'move', key });
 	}
 
 	/** Reorder by one step, for the context-menu fallback where dragging isn't available. */
-	moveOffset(path: string, delta: number): void {
-		const from = this.indexOf(path);
+	moveOffset(key: string, delta: number): void {
+		const from = this.indexOf(key);
 		if (from < 0) return;
 		const to = from + delta;
 		if (to < 0 || to >= this.entries.length) return;
-		this.relocate(path, delta > 0 ? to + 1 : to);
-		this.commit({ type: 'move', path });
+		this.relocate(key, delta > 0 ? to + 1 : to);
+		this.commit({ type: 'move', key });
 	}
 
-	removeByPath(path: string): void {
-		const index = this.indexOf(path);
+	remove(key: string): void {
+		const index = this.indexOf(key);
 		if (index < 0) return;
 		this.entries.splice(index, 1);
-		this.commit({ type: 'remove', path });
+		this.commit({ type: 'remove', key });
 	}
 
-	toggleFold(path: string): void {
-		const entry = this.entries[this.indexOf(path)];
+	/** Takes every card of a note off the desk: the whole note's, and those of its headings and blocks. */
+	removeNote(path: string): void {
+		const kept = this.entries.filter((entry) => entry.path !== path);
+		if (kept.length === this.entries.length) return;
+		this.entries.splice(0, this.entries.length, ...kept);
+		this.commit({ type: 'delete', path });
+	}
+
+	toggleFold(key: string): void {
+		const entry = this.get(key);
 		if (!entry) return;
 		entry.collapsed = !entry.collapsed;
-		this.commit({ type: 'fold', path });
+		this.commit({ type: 'fold', key });
 	}
 
 	setAllFolded(collapsed: boolean): void {
@@ -136,33 +163,34 @@ export class DeskStore extends Events {
 		this.commit({ type: 'clear' });
 	}
 
+	/** All of a note's cards follow it; its headings and blocks keep their names inside it. */
 	renamePath(oldPath: string, newPath: string): void {
-		const entry = this.entries[this.indexOf(oldPath)];
-		if (!entry) return;
+		const renamed = this.entries.filter((entry) => entry.path === oldPath);
+		if (renamed.length === 0) return;
 		// Renaming a note to another file type, e.g. `.md` to `.base`, leaves nothing to show on a
 		// card, so it comes off the desk the way a deleted note does.
 		if (!isNotePath(newPath)) {
-			this.removeByPath(oldPath);
+			this.removeNote(oldPath);
 			return;
 		}
-		entry.path = newPath;
+		for (const entry of renamed) entry.path = newPath;
 		this.commit({ type: 'rename', oldPath, newPath });
 	}
 
-	setColor(path: string, color: DeskColor | undefined): void {
-		const entry = this.entries[this.indexOf(path)];
+	setColor(key: string, color: DeskColor | undefined): void {
+		const entry = this.get(key);
 		if (!entry || entry.color === color) return;
 		entry.color = color;
 		this.regroup();
-		this.commit({ type: 'color', path });
+		this.commit({ type: 'color', key });
 	}
 
 	/** `undefined` lets the preview fit its note again. */
-	setPreviewHeight(path: string, height: number | undefined): void {
-		const entry = this.entries[this.indexOf(path)];
+	setPreviewHeight(key: string, height: number | undefined): void {
+		const entry = this.get(key);
 		if (!entry || entry.previewHeight === height) return;
 		entry.previewHeight = height;
-		this.commit({ type: 'resize', path });
+		this.commit({ type: 'resize', key });
 	}
 
 	clearColor(color: DeskColor): void {
@@ -240,9 +268,9 @@ export class DeskStore extends Events {
 	 * `targetIndex` is an insertion point in the list as it looks *before* the entry is pulled
 	 * out, so a drop indicator's position maps to it directly.
 	 */
-	private relocate(path: string, targetIndex: number, orNew?: DeskEntry): void {
+	private relocate(key: string, targetIndex: number, orNew?: DeskEntry): void {
 		const entries = this.entries;
-		const fromIndex = this.indexOf(path);
+		const fromIndex = this.indexOf(key);
 		const bounded = Math.max(0, Math.min(targetIndex, entries.length));
 		const entry = fromIndex >= 0 ? entries.splice(fromIndex, 1)[0] : orNew;
 		if (!entry) return;

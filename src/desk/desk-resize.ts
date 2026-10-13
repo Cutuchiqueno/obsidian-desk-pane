@@ -117,7 +117,7 @@ export class DeskResizeController extends Component {
 		const rounded = Math.round(drag.height);
 		const height = rounded < Math.round(drag.maxHeight) ? rounded : undefined;
 		setPreviewHeight(drag.previewEl, height);
-		const path = drag.cardEl.dataset.path;
-		if (path) this.store.setPreviewHeight(path, height);
+		const key = drag.cardEl.dataset.key;
+		if (key) this.store.setPreviewHeight(key, height);
 	}
 }

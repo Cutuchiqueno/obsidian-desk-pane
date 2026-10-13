@@ -1,32 +1,41 @@
-import { normalizePath } from 'obsidian';
+import { normalizePath, parseLinktext } from 'obsidian';
 import type { App, TFile } from 'obsidian';
-import { isNoteFile } from './types';
+import { targetFor } from './note-part';
+import { entryKey, isNoteFile } from './types';
+import type { DeskTarget } from './types';
 
 /**
- * Turns the payload of a drag that came from outside the Desk list into the Markdown notes it
- * refers to. Obsidian exposes no public API for its internal drag data, so this reads `text/plain`:
- * the File Explorer puts an `obsidian://open` URL there, while dragged link text arrives verbatim.
- * Editor tabs carry no payload at all; `TabDrag` handles those.
+ * Turns the payload of a drag that came from outside the Desk list into the cards it refers to:
+ * Markdown notes, or their headings and blocks for a link like `[[Note#Heading]]`. Obsidian exposes
+ * no public API for its internal drag data, so this reads `text/plain`: the File Explorer puts an
+ * `obsidian://open` URL there, while dragged link text arrives verbatim. Editor tabs carry no
+ * payload at all; `TabDrag` handles those.
  */
-export function resolveDroppedFiles(dataTransfer: DataTransfer | null, app: App): TFile[] {
+export function resolveDroppedTargets(dataTransfer: DataTransfer | null, app: App): DeskTarget[] {
 	const text = dataTransfer?.getData('text/plain') || dataTransfer?.getData('text/uri-list') || '';
-	const files: TFile[] = [];
+	const targets = new Map<string, DeskTarget>();
 	for (const line of text.split('\n')) {
-		const file = resolveLinkText(extractLinkTarget(line, app), app);
-		if (file && !files.includes(file)) files.push(file);
+		const { path, subpath } = extractLinkTarget(line, app);
+		const file = resolveLinkPath(path, app);
+		if (!file) continue;
+		const target = targetFor(app, file, subpath);
+		targets.set(entryKey(target), target);
 	}
-	return files;
+	return Array.from(targets.values());
 }
 
-function extractLinkTarget(raw: string, app: App): string {
+/** The note a dragged line links to, and the `#Heading` or `#^block` in it, if any. */
+function extractLinkTarget(raw: string, app: App): { path: string; subpath: string } {
 	let text = raw.trim();
 	if (text.startsWith('!')) text = text.slice(1).trim();
+	// The URL names a whole note, by a path that may itself contain a `#`.
+	if (text.startsWith('obsidian://')) {
+		return { path: vaultPathFromObsidianUrl(text, app) ?? '', subpath: '' };
+	}
 
 	const wikilink = /^\[\[(.+)\]\]$/.exec(text);
 	const markdownLink = /^\[[^\]]*\]\((.+)\)$/.exec(text);
-	if (text.startsWith('obsidian://')) {
-		text = vaultPathFromObsidianUrl(text, app) ?? '';
-	} else if (wikilink?.[1]) {
+	if (wikilink?.[1]) {
 		text = wikilink[1];
 	} else if (markdownLink?.[1]) {
 		text = markdownLink[1].trim();
@@ -36,9 +45,8 @@ function extractLinkTarget(raw: string, app: App): string {
 
 	const pipe = text.indexOf('|');
 	if (pipe >= 0) text = text.slice(0, pipe);
-	const hash = text.indexOf('#');
-	if (hash > 0) text = text.slice(0, hash);
-	return text.trim();
+	const { path, subpath } = parseLinktext(text.trim());
+	return { path: path.trim(), subpath };
 }
 
 /** File Explorer drags carry `obsidian://open?vault=…&file=<vault path without extension>`. */
@@ -62,11 +70,12 @@ function decodeUriComponentSafe(text: string): string {
 	}
 }
 
-function resolveLinkText(linktext: string, app: App): TFile | null {
-	if (!linktext) return null;
-	const linked = app.metadataCache.getFirstLinkpathDest(linktext, '');
+/** Empty for a link into the note it's in, like `[[#Heading]]`, which can't say which note that is. */
+function resolveLinkPath(linkpath: string, app: App): TFile | null {
+	if (!linkpath) return null;
+	const linked = app.metadataCache.getFirstLinkpathDest(linkpath, '');
 	if (linked) return asMarkdownFile(linked);
-	const path = normalizePath(linktext);
+	const path = normalizePath(linkpath);
 	return asMarkdownFile(app.vault.getFileByPath(path) ?? app.vault.getFileByPath(`${path}.md`));
 }
 

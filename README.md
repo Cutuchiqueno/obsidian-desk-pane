@@ -25,6 +25,16 @@ Open the pane with the ribbon icon or the **Desk Sidebar: Open pane** command, t
   as its own tab in the tab group you drop it on, and leaves the desk.
 - **Add a note without closing anything** — drag it from the File Explorer, drag link text into the
   pane, or run **Desk Sidebar: Add current note**.
+- **Add a heading or block** — right-click a heading or block in the editor and select **Add
+  heading to desk** or **Add block to desk**, or run **Desk Sidebar: Add current heading or
+  block**. You can also drag a link like `[[Note#Heading]]` or `[[Note#^block]]` into the pane. The
+  card shows only that heading's section (up to the next heading of the same or a higher level) or
+  that block, with its note's name above. It goes to the top of the desk, and sits beside the whole
+  note and the note's other headings and blocks. A block without an ID gets one, the same as with
+  **Copy link to block**: ` ^` and six letters and digits at the end of a paragraph or list item,
+  or on a line of its own after a table, quote, callout, code block, or math block. That is the
+  only time Desk Sidebar changes a note. If the heading is renamed or the block's ID removed, its
+  card shows that it's gone.
 - **Add a note from its context menu** — right-click a note in the File Explorer, its tab, a link
   to it, or the graph and select **Add to desk**, beside **Open in new window**. The note goes to
   the top of the desk and stays open wherever it was; selecting several notes in the File Explorer
@@ -39,7 +49,8 @@ Open the pane with the ribbon icon or the **Desk Sidebar: Open pane** command, t
   **Maximum card height** setting. It keeps the height you drag it to, also while it's folded,
   filtered, or grouped; drag it all the way open, or right-click it and select **Reset height**, to
   fit it to its note again.
-- **Open a note** — right-click it and select **Open note**, or drag it into the editor area.
+- **Open a note** — right-click it and select **Open note**, or drag it into the editor area. A
+  heading's or block's card opens its note scrolled to it.
 - **Collapse all, expand all, clear the desk** — use the buttons at the top of the pane. Clearing
   asks first, and only takes the notes off the desk; they stay in your vault.
 - **Filter the desk** — select the search button at the top of the pane and type. Only notes whose
@@ -84,6 +95,9 @@ A CSS snippet still overrides the setting, if you want a cap in other units:
   the pane dock in the sidebar again; everything else keeps working.
 - Only Markdown notes can be put on the desk.
 - Previews are read-only, and are rendered when a note is unfolded — edit the note by opening it.
+- A list item's card shows the item without the items nested under it.
+- A heading's card stays with the heading's text. Rename the heading and the card shows it's gone,
+  until you add the heading again.
 
 ## Development
 

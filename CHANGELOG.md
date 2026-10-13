@@ -12,6 +12,12 @@
   **Desk Sidebar: Add notes from inbox**, to put every note in the inbox folder on top of the desk
   at once, newest first. Notes in its subfolders and notes already on the desk are left as they
   are. Adding more than 10 notes asks first.
+- Put a heading or a block of a note on the desk as its own card, beside the whole note and its
+  other headings and blocks. Right-click it in the editor and select **Add heading to desk** or
+  **Add block to desk**, or run **Desk Sidebar: Add current heading or block**. You can also drag a
+  link like `[[Note#Heading]]` or `[[Note#^block]]` into the pane. The card shows only that
+  heading's section or that block. A block without an ID gets one written into the note, the same
+  way **Copy link to block** does it.
 
 ## 1.1.0 - 2026-10-05
 

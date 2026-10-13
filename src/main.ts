@@ -1,6 +1,7 @@
 import { Plugin } from 'obsidian';
 import { DeskSettings, DEFAULT_SETTINGS, DeskSettingTab } from './settings';
 import { registerDeskCommands } from './desk/commands';
+import { registerDeskEditorMenu } from './desk/editor-menu';
 import { registerDeskFileMenu } from './desk/file-menu';
 import { DeskStore } from './desk/store';
 import { registerDeskVaultSync } from './desk/sync';
@@ -26,6 +27,7 @@ export default class DeskPlugin extends Plugin {
 		this.registerView(VIEW_TYPE_DESK, (leaf) => new DeskView(leaf, this.store, this.tabDrag));
 		registerDeskCommands(this, this.store);
 		registerDeskFileMenu(this, this.store);
+		registerDeskEditorMenu(this, this.store);
 		registerDeskVaultSync(this, this.store);
 
 		this.addSettingTab(new DeskSettingTab(this.app, this));

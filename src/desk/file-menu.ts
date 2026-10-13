@@ -40,7 +40,7 @@ function addMenuItem(
 			.setIcon(DESK_ICON)
 			.onClick(() => {
 				// At the top of the desk, keeping the order they were selected in.
-				paths.forEach((path, offset) => store.addOrMove(path, offset));
+				paths.forEach((path, offset) => store.addOrMove({ path }, offset));
 				// Opens the pane, so adding a note always has something to show for it.
 				void activateDeskView(plugin.app);
 			}),

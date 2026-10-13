@@ -1,5 +1,7 @@
+import { MarkdownView } from 'obsidian';
 import type { App } from 'obsidian';
 import type DeskPlugin from '../main';
+import { addCursorPart, cursorPartKind } from './cursor-part';
 import { addInboxNotes } from './inbox';
 import { createDeskNote } from './new-note';
 import type { DeskStore } from './store';
@@ -42,7 +44,17 @@ export function registerDeskCommands(plugin: DeskPlugin, store: DeskStore): void
 		checkCallback: (checking) => {
 			const file = plugin.app.workspace.getActiveFile();
 			if (!isNoteFile(file)) return false;
-			if (!checking) store.addOrMove(file.path, store.entries.length);
+			if (!checking) store.addOrMove({ path: file.path }, store.entries.length);
+			return true;
+		},
+	});
+
+	plugin.addCommand({
+		id: 'add-current-block',
+		name: 'Add current heading or block',
+		editorCheckCallback: (checking, _editor, ctx) => {
+			if (!(ctx instanceof MarkdownView) || !cursorPartKind(plugin.app, store, ctx)) return false;
+			if (!checking) void addCursorPart(plugin.app, store, ctx);
 			return true;
 		},
 	});
@@ -53,7 +65,7 @@ export function registerDeskCommands(plugin: DeskPlugin, store: DeskStore): void
 		checkCallback: (checking) => {
 			const file = plugin.app.workspace.getActiveFile();
 			if (!file || !store.has(file.path)) return false;
-			if (!checking) store.removeByPath(file.path);
+			if (!checking) store.remove(file.path);
 			return true;
 		},
 	});

@@ -15,10 +15,13 @@ export interface GroupHeader {
 	foldEl: HTMLElement;
 }
 
-/** A card per note: a header to fold, open, drag, color, or remove it, and its preview below. */
-export function createRow(listEl: HTMLElement, path: string, collapsed: boolean): DeskRow {
+/**
+ * A card per note, or per heading or block of one: a header to fold, open, drag, color, or remove
+ * it, and its preview below. `key` is the card's `entryKey`.
+ */
+export function createRow(listEl: HTMLElement, key: string, collapsed: boolean): DeskRow {
 	const el = listEl.createDiv({ cls: 'desk-item' });
-	el.dataset.path = path;
+	el.dataset.key = key;
 
 	// Only the header is the drag handle, so text inside an unfolded preview stays selectable.
 	const headerEl = el.createDiv({ cls: 'desk-item-header is-clickable' });
@@ -63,8 +66,15 @@ export function setGroupFoldButton(foldEl: HTMLElement, anyUnfolded: boolean): v
 	foldEl.setAttr('aria-label', anyUnfolded ? 'Collapse all in group' : 'Expand all in group');
 }
 
-export function setRowTitle(row: DeskRow, path: string, exists: boolean): void {
+/** `part` names the heading or block a card shows, on a line under its note's name. */
+export function setRowTitle(
+	row: DeskRow,
+	path: string,
+	part: string | undefined,
+	exists: boolean,
+): void {
 	row.titleEl.setText(basename(path));
+	if (part) row.titleEl.createDiv({ cls: 'desk-item-part', text: part });
 	row.el.classList.toggle('desk-item-missing', !exists);
 }
 

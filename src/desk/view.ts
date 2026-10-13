@@ -3,8 +3,9 @@ import type { TFile, WorkspaceLeaf } from 'obsidian';
 import { editColorName, setColorAttr, showColorMenu } from './color';
 import { DeskDragController } from './desk-drag';
 import { DeskResizeController } from './desk-resize';
-import { noteMatchesFilter } from './filter';
+import { targetMatchesFilter } from './filter';
 import { addInboxNotes } from './inbox';
+import { hasPart, openState, partTitle, readTargetMarkdown } from './note-part';
 import {
 	createGroupHeader,
 	createRow,
@@ -16,11 +17,15 @@ import type { DeskRow, GroupHeader } from './row';
 import type { DeskStore } from './store';
 import type { TabDrag } from './tab-drag';
 import { DeskToolbar } from './toolbar';
-import { DESK_ICON, isNoteFile, VIEW_TYPE_DESK } from './types';
-import type { DeskChange, DeskColor } from './types';
+import { DESK_ICON, entryKey, isNoteFile, VIEW_TYPE_DESK } from './types';
+import type { DeskChange, DeskColor, DeskEntry, DeskTarget } from './types';
 
 interface MountedRow extends DeskRow {
 	preview: Component | null;
+	/** Whether the preview says its heading or block is gone, rather than showing it. */
+	partMissing: boolean;
+	/** Bumped on every title update, as `filterPass` is for the filter. */
+	titlePass: number;
 }
 
 interface MountedGroup extends GroupHeader {
@@ -33,6 +38,7 @@ export class DeskView extends ItemView {
 	private emptyEl!: HTMLElement;
 	private noMatchesEl!: HTMLElement;
 	private toolbar!: DeskToolbar;
+	/** By `entryKey`, so a note can have a row of its own besides those of its headings and blocks. */
 	private readonly rows = new Map<string, MountedRow>();
 	private groups: MountedGroup[] = [];
 	private filterQuery = '';
@@ -99,9 +105,11 @@ export class DeskView extends ItemView {
 		this.registerEvent(this.store.onChange((change) => this.render(change)));
 		this.registerEvent(
 			this.app.vault.on('modify', (file) => {
-				if (this.filterQuery && this.rows.has(file.path)) void this.applyFilter();
+				if (this.filterQuery && this.isOnDesk(file.path)) void this.applyFilter();
 			}),
 		);
+		// Comes after `modify`, once Obsidian has found the note's headings and blocks again.
+		this.registerEvent(this.app.metadataCache.on('changed', (file) => this.refreshParts(file.path)));
 		this.render();
 	}
 
@@ -125,40 +133,42 @@ export class DeskView extends ItemView {
 			}
 			return;
 		}
-		const path = this.pathFromEvent(event);
-		if (!path) return;
+		const key = this.keyFromEvent(event);
+		if (!key) return;
 		if (target?.closest('.desk-item-remove')) {
-			this.store.removeByPath(path);
+			this.store.remove(key);
 		} else if (target?.closest('.desk-item-color')) {
-			const current = this.store.entries[this.store.indexOf(path)]?.color;
 			showColorMenu(
 				event,
-				current,
+				this.store.get(key)?.color,
 				(color) => this.store.labelOf(color),
-				(color) => this.store.setColor(path, color),
+				(color) => this.store.setColor(key, color),
 			);
 		} else if (target?.closest('.desk-item-header')) {
 			// Clicks inside a preview are left alone, for selecting text and following links.
-			this.store.toggleFold(path);
+			this.store.toggleFold(key);
 		}
 	}
 
 	private onContextMenu(event: MouseEvent): void {
-		const path = this.pathFromEvent(event);
-		if (!path) return;
-		const index = this.store.indexOf(path);
-		if (index < 0) return;
+		const key = this.keyFromEvent(event);
+		if (!key) return;
+		const index = this.store.indexOf(key);
+		const entry = this.store.entries[index];
+		if (!entry) return;
 		event.preventDefault();
 
 		const menu = new Menu();
-		const file = this.fileForPath(path);
+		const file = this.fileForPath(entry.path);
 		menu.addItem((item) =>
 			item
 				.setTitle('Open note')
 				.setIcon('file-text')
 				.setDisabled(!file)
 				.onClick(() => {
-					if (file) void this.app.workspace.getLeaf(Keymap.isModEvent(event)).openFile(file);
+					if (!file) return;
+					const leaf = this.app.workspace.getLeaf(Keymap.isModEvent(event));
+					void leaf.openFile(file, openState(entry));
 				}),
 		);
 		menu.addSeparator();
@@ -167,29 +177,29 @@ export class DeskView extends ItemView {
 				.setTitle('Move up')
 				.setIcon('arrow-up')
 				.setDisabled(index === 0)
-				.onClick(() => this.store.moveOffset(path, -1)),
+				.onClick(() => this.store.moveOffset(key, -1)),
 		);
 		menu.addItem((item) =>
 			item
 				.setTitle('Move down')
 				.setIcon('arrow-down')
 				.setDisabled(index === this.store.entries.length - 1)
-				.onClick(() => this.store.moveOffset(path, 1)),
+				.onClick(() => this.store.moveOffset(key, 1)),
 		);
 		menu.addSeparator();
 		menu.addItem((item) =>
 			item
 				.setTitle('Reset height')
 				.setIcon('unfold-vertical')
-				.setDisabled(this.store.entries[index]?.previewHeight === undefined)
-				.onClick(() => this.store.setPreviewHeight(path, undefined)),
+				.setDisabled(entry.previewHeight === undefined)
+				.onClick(() => this.store.setPreviewHeight(key, undefined)),
 		);
 		menu.addSeparator();
 		menu.addItem((item) =>
 			item
 				.setTitle('Remove from desk')
 				.setIcon('x')
-				.onClick(() => this.store.removeByPath(path)),
+				.onClick(() => this.store.remove(key)),
 		);
 		menu.showAtMouseEvent(event);
 	}
@@ -200,7 +210,7 @@ export class DeskView extends ItemView {
 			return;
 		}
 		if (change?.type === 'rename') {
-			this.relabelRow(change.oldPath, change.newPath);
+			this.relabelRows(change.oldPath, change.newPath);
 			void this.applyFilter();
 			return;
 		}
@@ -218,8 +228,9 @@ export class DeskView extends ItemView {
 		const listed = new Set<string>();
 		let cursor: ChildNode | null = this.listEl.firstChild;
 		for (const entry of entries) {
-			listed.add(entry.path);
-			const row = this.rows.get(entry.path) ?? this.mountRow(entry.path);
+			const key = entryKey(entry);
+			listed.add(key);
+			const row = this.rows.get(key) ?? this.mountRow(entry);
 			if (grouped && (!group || group.color !== entry.color)) {
 				group = {
 					...createGroupHeader(entry.color, this.store.labelOf(entry.color)),
@@ -235,16 +246,16 @@ export class DeskView extends ItemView {
 			} else {
 				this.listEl.insertBefore(row.el, cursor);
 			}
-			this.syncFold(row, entry.path, entry.collapsed);
+			this.syncFold(row, entry);
 			setColorAttr(row.el, entry.color);
 			setPreviewHeight(row.previewEl, entry.previewHeight);
 		}
 
-		for (const [path, row] of this.rows) {
-			if (listed.has(path)) continue;
+		for (const [key, row] of this.rows) {
+			if (listed.has(key)) continue;
 			this.unmountPreview(row);
 			row.el.remove();
-			this.rows.delete(path);
+			this.rows.delete(key);
 		}
 		for (const group of this.groups) setGroupFoldButton(group.foldEl, anyUnfolded(group));
 		this.syncGroups();
@@ -261,18 +272,20 @@ export class DeskView extends ItemView {
 		void this.applyFilter();
 	}
 
-	/** Hides the notes that don't match the search filter's text or the color filter's colors. */
+	/** Hides the cards that don't match the search filter's text or the color filter's colors. */
 	private async applyFilter(): Promise<void> {
 		const pass = ++this.filterPass;
 		const query = this.filterQuery;
 		const colors = this.colorFilter;
-		const colorByPath = new Map(this.store.entries.map((entry) => [entry.path, entry.color]));
+		const entryByKey = new Map(this.store.entries.map((entry) => [entryKey(entry), entry]));
 		const rows = Array.from(this.rows);
 		const matches = await Promise.all(
-			rows.map(([path]) => {
-				const color = colorByPath.get(path);
+			rows.map(([key]) => {
+				const entry = entryByKey.get(key);
+				if (!entry) return Promise.resolve(false);
+				const color = entry.color;
 				if (colors.size > 0 && !(color && colors.has(color))) return Promise.resolve(false);
-				return query ? noteMatchesFilter(this.app, path, query) : Promise.resolve(true);
+				return query ? targetMatchesFilter(this.app, entry, query) : Promise.resolve(true);
 			}),
 		);
 		if (pass !== this.filterPass) return;
@@ -291,41 +304,94 @@ export class DeskView extends ItemView {
 		}
 	}
 
-	private mountRow(path: string): MountedRow {
-		const row: MountedRow = { ...createRow(this.listEl, path, true), preview: null };
-		setRowTitle(row, path, this.fileForPath(path) !== null);
-		this.rows.set(path, row);
+	private mountRow(entry: DeskEntry): MountedRow {
+		const key = entryKey(entry);
+		const row: MountedRow = {
+			...createRow(this.listEl, key, true),
+			preview: null,
+			partMissing: false,
+			titlePass: 0,
+		};
+		void this.titleRow(row, entry);
+		this.rows.set(key, row);
 		return row;
 	}
 
-	private relabelRow(oldPath: string, newPath: string): void {
-		const row = this.rows.get(oldPath);
-		if (!row) return;
-		this.rows.delete(oldPath);
-		this.rows.set(newPath, row);
-		row.el.dataset.path = newPath;
-		setRowTitle(row, newPath, this.fileForPath(newPath) !== null);
-	}
-
-	private syncFold(row: MountedRow, path: string, collapsed: boolean): void {
-		row.el.classList.toggle('is-collapsed', collapsed);
-		if (collapsed) {
-			this.unmountPreview(row);
-		} else if (!row.preview) {
-			void this.mountPreview(row, path);
+	/** Every card of a renamed note follows it, keeping its heading or block. */
+	private relabelRows(oldPath: string, newPath: string): void {
+		for (const entry of this.store.entries) {
+			if (entry.path !== newPath) continue;
+			const oldKey = entryKey({ path: oldPath, subpath: entry.subpath });
+			const row = this.rows.get(oldKey);
+			if (!row) continue;
+			const key = entryKey(entry);
+			this.rows.delete(oldKey);
+			this.rows.set(key, row);
+			row.el.dataset.key = key;
+			void this.titleRow(row, entry);
 		}
 	}
 
-	private async mountPreview(row: MountedRow, path: string): Promise<void> {
+	/**
+	 * A heading or block can be renamed, edited, or deleted, or found only once Obsidian has indexed
+	 * its note: its cards' titles follow, and a preview that said it was gone, or showed it until it
+	 * went, is rendered again.
+	 */
+	private refreshParts(path: string): void {
 		const file = this.fileForPath(path);
+		for (const entry of this.store.entries) {
+			if (entry.path !== path || !entry.subpath) continue;
+			const row = this.rows.get(entryKey(entry));
+			if (!row) continue;
+			void this.titleRow(row, entry);
+			const exists = file !== null && hasPart(this.app, file, entry.subpath);
+			if (row.preview && row.partMissing === exists) {
+				this.unmountPreview(row);
+				void this.mountPreview(row, entry);
+			}
+		}
+	}
+
+	/** A heading's card is named after it, a block's after its first words, which takes a read. */
+	private async titleRow(row: MountedRow, target: DeskTarget): Promise<void> {
+		const pass = ++row.titlePass;
+		const file = this.fileForPath(target.path);
+		const { subpath } = target;
+		const exists = file !== null && (!subpath || hasPart(this.app, file, subpath));
+		const part = subpath ? await partTitle(this.app, file, subpath) : undefined;
+		if (pass !== row.titlePass) return;
+		setRowTitle(row, target.path, part, exists);
+	}
+
+	private syncFold(row: MountedRow, entry: DeskEntry): void {
+		row.el.classList.toggle('is-collapsed', entry.collapsed);
+		if (entry.collapsed) {
+			this.unmountPreview(row);
+		} else if (!row.preview) {
+			void this.mountPreview(row, entry);
+		}
+	}
+
+	private async mountPreview(row: MountedRow, target: DeskTarget): Promise<void> {
+		const file = this.fileForPath(target.path);
 		if (!file) return;
 		const preview = new Component();
 		this.addChild(preview);
 		row.preview = preview;
 
-		const markdown = await this.app.vault.cachedRead(file);
+		const markdown = await readTargetMarkdown(this.app, file, target.subpath);
 		if (row.preview !== preview) return;
 		row.previewEl.empty();
+		row.partMissing = markdown === null;
+		if (markdown === null) {
+			row.previewEl.createDiv({
+				cls: 'desk-item-part-missing',
+				text: target.subpath?.startsWith('#^')
+					? 'This block is no longer in the note.'
+					: 'This heading is no longer in the note.',
+			});
+			return;
+		}
 		await MarkdownRenderer.render(this.app, markdown, row.previewEl, file.path, preview);
 	}
 
@@ -333,12 +399,17 @@ export class DeskView extends ItemView {
 		if (!row.preview) return;
 		this.removeChild(row.preview);
 		row.preview = null;
+		row.partMissing = false;
 		row.previewEl.empty();
 	}
 
-	private pathFromEvent(event: Event): string | null {
+	private keyFromEvent(event: Event): string | null {
 		if (!(event.target instanceof Element)) return null;
-		return event.target.closest<HTMLElement>('.desk-item')?.dataset.path ?? null;
+		return event.target.closest<HTMLElement>('.desk-item')?.dataset.key ?? null;
+	}
+
+	private isOnDesk(path: string): boolean {
+		return this.store.entries.some((entry) => entry.path === path);
 	}
 
 	/**

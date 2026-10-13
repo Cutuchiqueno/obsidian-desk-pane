@@ -1,13 +1,16 @@
 import { Component } from 'obsidian';
-import type { App, TFile, WorkspaceLeaf } from 'obsidian';
-import { resolveDroppedFiles } from './drop-resolve';
+import type { App, OpenViewState, TFile, WorkspaceLeaf } from 'obsidian';
+import { resolveDroppedTargets } from './drop-resolve';
 import { computeInsertionIndex, hideIndicator, showIndicator } from './insertion';
+import { openState } from './note-part';
 import type { DeskStore } from './store';
 import type { TabDrag } from './tab-drag';
 import { DESK_ENTRY_MIME } from './types';
+import type { DeskTarget } from './types';
 
 interface RowDrag {
-	path: string;
+	key: string;
+	target: DeskTarget;
 	rowEl: HTMLElement;
 	openedInTab: boolean;
 }
@@ -65,12 +68,14 @@ export class DeskDragController extends Component {
 		// starts on the header moves the note.
 		const headerEl = evt.target instanceof Element ? evt.target.closest('.desk-item-header') : null;
 		const rowEl = headerEl?.closest<HTMLElement>('.desk-item');
-		const path = rowEl?.dataset.path;
-		if (!rowEl || !path || !evt.dataTransfer) return;
-		evt.dataTransfer.setData(DESK_ENTRY_MIME, path);
+		const key = rowEl?.dataset.key;
+		const entry = key ? this.store.get(key) : undefined;
+		if (!rowEl || !key || !entry || !evt.dataTransfer) return;
+		evt.dataTransfer.setData(DESK_ENTRY_MIME, key);
 		evt.dataTransfer.effectAllowed = 'move';
 		rowEl.addClass('is-dragging');
-		this.rowDrag = { path, rowEl, openedInTab: false };
+		const target = { path: entry.path, subpath: entry.subpath };
+		this.rowDrag = { key, target, rowEl, openedInTab: false };
 	}
 
 	private onRowDragEnd(): void {
@@ -80,7 +85,7 @@ export class DeskDragController extends Component {
 		if (!drag) return;
 		drag.rowEl.removeClass('is-dragging');
 		// Removed only now, so the row is still in place while Obsidian finishes the drag.
-		if (drag.openedInTab) this.store.removeByPath(drag.path);
+		if (drag.openedInTab) this.store.remove(drag.key);
 	}
 
 	private onPaneDragOver(evt: DragEvent): void {
@@ -113,13 +118,13 @@ export class DeskDragController extends Component {
 
 		const tabNote = this.tabDrag.note;
 		if (tabNote) {
-			this.store.addOrMove(tabNote.path, index);
+			this.store.addOrMove({ path: tabNote.path }, index);
 			this.tabDrag.closeTabWhenDragEnds();
 		} else if (dataTransfer.types.includes(DESK_ENTRY_MIME)) {
 			this.store.move(dataTransfer.getData(DESK_ENTRY_MIME), index);
 		} else {
-			resolveDroppedFiles(dataTransfer, this.app).forEach((file, offset) =>
-				this.store.addOrMove(file.path, index + offset),
+			resolveDroppedTargets(dataTransfer, this.app).forEach((target, offset) =>
+				this.store.addOrMove(target, index + offset),
 			);
 		}
 	}
@@ -154,7 +159,8 @@ export class DeskDragController extends Component {
 		evt.stopPropagation();
 		this.dropOverlay()?.hideOverlay?.();
 		this.rowDrag.openedInTab = true;
-		void openInNewTab(this.app, target.leaf, target.file);
+		const state = { active: true, ...openState(this.rowDrag.target) };
+		void openInNewTab(this.app, target.leaf, target.file, state);
 	}
 
 	/** The main-area tab group under the pointer while one of this pane's notes is being dragged. */
@@ -162,7 +168,7 @@ export class DeskDragController extends Component {
 		const el = evt.target;
 		if (!this.rowDrag || !(el instanceof Element) || el.closest('.desk-view')) return null;
 		const groupEl = el.closest<HTMLElement>('.workspace-tabs');
-		const file = this.app.vault.getFileByPath(this.rowDrag.path);
+		const file = this.app.vault.getFileByPath(this.rowDrag.target.path);
 		if (!groupEl || !file) return null;
 		const leaf = rootLeafAt(this.app, el, groupEl);
 		return leaf ? { file, leaf, groupEl } : null;
@@ -189,11 +195,16 @@ function rootLeafAt(app: App, el: Element, groupEl: HTMLElement): WorkspaceLeaf 
 	);
 }
 
-async function openInNewTab(app: App, besideLeaf: WorkspaceLeaf, file: TFile): Promise<void> {
+async function openInNewTab(
+	app: App,
+	besideLeaf: WorkspaceLeaf,
+	file: TFile,
+	state: OpenViewState,
+): Promise<void> {
 	if (besideLeaf.view.getViewType() === 'empty') {
-		await besideLeaf.openFile(file, { active: true });
+		await besideLeaf.openFile(file, state);
 		return;
 	}
 	app.workspace.setActiveLeaf(besideLeaf, { focus: false });
-	await app.workspace.getLeaf('tab').openFile(file, { active: true });
+	await app.workspace.getLeaf('tab').openFile(file, state);
 }

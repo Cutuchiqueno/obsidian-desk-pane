@@ -10,7 +10,7 @@ export function registerDeskVaultSync(plugin: DeskPlugin, store: DeskStore): voi
 	);
 	plugin.registerEvent(
 		plugin.app.vault.on('delete', (file) => {
-			if (file instanceof TFile) store.removeByPath(file.path);
+			if (file instanceof TFile) store.removeNote(file.path);
 		}),
 	);
 }
