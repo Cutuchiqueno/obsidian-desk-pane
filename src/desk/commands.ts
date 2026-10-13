@@ -1,11 +1,14 @@
 import { MarkdownView } from 'obsidian';
 import type { App } from 'obsidian';
 import type DeskPlugin from '../main';
+import { addToCanvas } from './canvas';
 import { addCursorPart, cursorPartKind } from './cursor-part';
 import { addInboxNotes } from './inbox';
 import { createDeskNote } from './new-note';
 import type { DeskStore } from './store';
 import { DESK_ICON, isNoteFile, VIEW_TYPE_DESK } from './types';
+import type { DeskEntry } from './types';
+import { DeskView } from './view';
 
 export async function activateDeskView(app: App): Promise<void> {
 	const existing = app.workspace.getLeavesOfType(VIEW_TYPE_DESK)[0];
@@ -71,6 +74,17 @@ export function registerDeskCommands(plugin: DeskPlugin, store: DeskStore): void
 	});
 
 	plugin.addCommand({
+		id: 'add-cards-to-canvas',
+		name: 'Add cards to canvas',
+		checkCallback: (checking) => {
+			const entries = visibleEntries(plugin.app, store);
+			if (entries.length === 0) return false;
+			if (!checking) addToCanvas(plugin.app, entries);
+			return true;
+		},
+	});
+
+	plugin.addCommand({
 		id: 'toggle-group-by-color',
 		name: 'Toggle grouping by color',
 		checkCallback: (checking) => {
@@ -88,6 +102,12 @@ export function registerDeskCommands(plugin: DeskPlugin, store: DeskStore): void
 async function createNoteWithPane(app: App, store: DeskStore): Promise<void> {
 	await activateDeskView(app);
 	await createDeskNote(app, store);
+}
+
+/** The cards the pane's filters leave visible; a pane that isn't loaded filters none out. */
+function visibleEntries(app: App, store: DeskStore): DeskEntry[] {
+	const view = app.workspace.getLeavesOfType(VIEW_TYPE_DESK)[0]?.view;
+	return view instanceof DeskView ? view.visibleEntries() : store.entries;
 }
 
 /** The pane opens first, so the notes have somewhere to show up. */

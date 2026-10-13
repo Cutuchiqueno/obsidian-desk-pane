@@ -18,6 +18,11 @@
   link like `[[Note#Heading]]` or `[[Note#^block]]` into the pane. The card shows only that
   heading's section or that block. A block without an ID gets one written into the note, the same
   way **Copy link to block** does it.
+- Put cards on a canvas. Select the canvas button at the top of the pane, or run **Desk Sidebar:
+  Add cards to canvas**, for every card the filters leave visible, or right-click a card and select
+  **Add to canvas...** for just that one. Pick a canvas, or create one as the quick switcher
+  creates a note. A new canvas gets the cards in a grid, and a canvas with content already gets
+  the grid to its right. Cards keep their colors, and those the canvas already has are left out.
 
 ## 1.1.0 - 2026-10-05
 

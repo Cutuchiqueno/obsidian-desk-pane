@@ -51,6 +51,16 @@ Open the pane with the ribbon icon or the **Desk Sidebar: Open pane** command, t
   fit it to its note again.
 - **Open a note** — right-click it and select **Open note**, or drag it into the editor area. A
   heading's or block's card opens its note scrolled to it.
+- **Add cards to a canvas** — select the canvas button at the top of the pane, or run **Desk
+  Sidebar: Add cards to canvas**, to put every card on a canvas; while a filter is on, only the
+  cards it leaves visible. For a single card, right-click it and select **Add to canvas...**. Then
+  pick a canvas, or create one the way the quick switcher creates a note: type a name and select
+  **Create new canvas**, or press Shift+Enter. A name with a `/` is a path from the vault root;
+  without one, the canvas goes where Obsidian puts new canvases. The cards go on in desk order,
+  showing their note, heading, or block, and keep their colors (blue and pink, which Canvas has no
+  preset for, as custom colors). A new canvas gets them in a grid; a canvas with content already
+  gets the grid to the right of it. Cards the canvas already has are left out. The canvas then
+  opens, or comes to the front if it's open.
 - **Collapse all, expand all, clear the desk** — use the buttons at the top of the pane. Clearing
   asks first, and only takes the notes off the desk; they stay in your vault.
 - **Filter the desk** — select the search button at the top of the pane and type. Only notes whose

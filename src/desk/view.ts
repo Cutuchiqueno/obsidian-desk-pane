@@ -1,5 +1,6 @@
 import { Component, ItemView, Keymap, MarkdownRenderer, Menu, setIcon } from 'obsidian';
 import type { TFile, WorkspaceLeaf } from 'obsidian';
+import { addToCanvas } from './canvas';
 import { editColorName, setColorAttr, showColorMenu } from './color';
 import { DeskDragController } from './desk-drag';
 import { DeskResizeController } from './desk-resize';
@@ -75,6 +76,7 @@ export class DeskView extends ItemView {
 			this.store,
 			(query) => this.setFilter(query),
 			(colors) => this.setColorFilter(colors),
+			() => addToCanvas(this.app, this.visibleEntries()),
 		);
 		const bodyEl = this.contentEl.createDiv({ cls: 'desk-body' });
 		this.emptyEl = bodyEl.createDiv({ cls: 'desk-empty' });
@@ -170,6 +172,13 @@ export class DeskView extends ItemView {
 					const leaf = this.app.workspace.getLeaf(Keymap.isModEvent(event));
 					void leaf.openFile(file, openState(entry));
 				}),
+		);
+		menu.addItem((item) =>
+			item
+				.setTitle('Add to canvas...')
+				.setIcon('layout-dashboard')
+				.setDisabled(!file)
+				.onClick(() => addToCanvas(this.app, [entry])),
 		);
 		menu.addSeparator();
 		menu.addItem((item) =>
@@ -292,7 +301,16 @@ export class DeskView extends ItemView {
 		rows.forEach(([, row], index) => row.el.toggleClass('is-filtered-out', !matches[index]));
 		const noneShown = rows.length > 0 && !matches.includes(true);
 		this.noMatchesEl.toggleClass('is-hidden', !noneShown);
+		this.toolbar.setVisibleCount(matches.filter(Boolean).length, rows.length);
 		this.syncGroups();
+	}
+
+	/** The cards the filters leave visible, folded or not, in desk order. */
+	visibleEntries(): DeskEntry[] {
+		return this.store.entries.filter((entry) => {
+			const row = this.rows.get(entryKey(entry));
+			return row !== undefined && !row.el.hasClass('is-filtered-out');
+		});
 	}
 
 	/** Counts the notes each group shows, hiding the header of a group the filters leave empty. */

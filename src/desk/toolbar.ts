@@ -15,6 +15,7 @@ export class DeskToolbar {
 	private readonly inboxButtonEl: HTMLElement;
 	private readonly foldButtonEl: HTMLElement;
 	private readonly clearButtonEl: HTMLElement;
+	private readonly canvasButtonEl: HTMLElement;
 	private readonly filterButtonEl: HTMLElement;
 	private readonly colorFilterButtonEl: HTMLElement;
 	private readonly groupButtonEl: HTMLElement;
@@ -28,6 +29,7 @@ export class DeskToolbar {
 		private readonly store: DeskStore,
 		private readonly onFilterChange: (query: string) => void,
 		onColorFilterChange: (colors: ReadonlySet<DeskColor>) => void,
+		private readonly onAddToCanvas: () => void,
 	) {
 		this.el = parentEl.createDiv({ cls: 'nav-header' });
 		const buttonsEl = this.el.createDiv({ cls: 'nav-buttons-container' });
@@ -42,6 +44,10 @@ export class DeskToolbar {
 		this.clearButtonEl = createButton(buttonsEl);
 		setIcon(this.clearButtonEl, 'list-x');
 		this.clearButtonEl.setAttr('aria-label', 'Clear desk');
+		// Canvas's own icon.
+		this.canvasButtonEl = createButton(buttonsEl);
+		setIcon(this.canvasButtonEl, 'layout-dashboard');
+		this.setVisibleCount(0, 0);
 		// Same icon, wording, and search field as the Backlinks pane's filter.
 		this.filterButtonEl = createButton(buttonsEl);
 		setIcon(this.filterButtonEl, 'search');
@@ -76,6 +82,8 @@ export class DeskToolbar {
 			this.store.setAllFolded(this.anyUnfolded());
 		} else if (buttonEl === this.clearButtonEl) {
 			new ConfirmClearModal(this.app, this.store.entries.length, () => this.store.clear()).open();
+		} else if (buttonEl === this.canvasButtonEl) {
+			this.onAddToCanvas();
 		} else if (buttonEl === this.filterButtonEl) {
 			this.toggleFilter();
 		} else if (buttonEl === this.colorFilterButtonEl) {
@@ -101,6 +109,15 @@ export class DeskToolbar {
 		this.groupButtonEl.toggleClass('is-active', grouped);
 		this.groupButtonEl.toggleClass('is-disabled', !grouped && counts.size === 0);
 		this.colorFilter.update(counts);
+	}
+
+	/** The canvas button takes the cards the filters leave visible, and says so while they hide any. */
+	setVisibleCount(visible: number, total: number): void {
+		this.canvasButtonEl.setAttr(
+			'aria-label',
+			visible < total ? 'Add visible cards to canvas' : 'Add cards to canvas',
+		);
+		this.canvasButtonEl.toggleClass('is-disabled', visible === 0);
 	}
 
 	/** Hiding the field also drops its query, so no note stays hidden without a visible reason. */
