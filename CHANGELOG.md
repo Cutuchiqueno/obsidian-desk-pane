@@ -8,6 +8,10 @@
   create an empty note and start writing. It opens in a new tab with its title selected for naming,
   and joins the top of the desk, folded. New notes go to the vault root, or to the folder set in
   the new **Inbox folder** setting.
+- Select the inbox button at the top of the pane, **Add notes from inbox** on an empty desk, or run
+  **Desk Sidebar: Add notes from inbox**, to put every note in the inbox folder on top of the desk
+  at once, newest first. Notes in its subfolders and notes already on the desk are left as they
+  are. Adding more than 10 notes asks first.
 
 ## 1.1.0 - 2026-10-05
 

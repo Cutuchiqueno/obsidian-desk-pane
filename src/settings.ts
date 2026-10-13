@@ -55,7 +55,7 @@ export class DeskSettingTab extends PluginSettingTab {
 			},
 			{
 				name: 'Inbox folder',
-				desc: 'Where notes created from the Desk pane go. Leave empty for the vault root.',
+				desc: 'Where notes created from the Desk pane go, and where adding the inbox takes notes from. Leave empty for the vault root.',
 				aliases: ['new note location', 'new notes folder'],
 				control: { type: 'folder', key: 'inboxFolder', placeholder: '/', includeRoot: true },
 			},

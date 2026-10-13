@@ -53,7 +53,10 @@ export class DeskStore extends Events {
 		return this.indexOf(path) >= 0;
 	}
 
-	/** The only way a note joins the desk, so the Markdown-only rule is enforced here for all of them. */
+	/**
+	 * Every note joins the desk through here or `addAllOnTop`, so the Markdown-only rule is enforced
+	 * in these two for all of them.
+	 */
 	addOrMove(path: string, targetIndex: number, collapsed = this.plugin.settings.defaultFolded): void {
 		if (!isNotePath(path)) return;
 		const isNew = !this.has(path);
@@ -63,15 +66,26 @@ export class DeskStore extends Events {
 
 	/**
 	 * A note created from the pane is empty and open in the editor, so its card arrives folded. It
-	 * goes on top, or while grouped on top of the notes without a color, so the grouping holds.
+	 * goes on top, where a new note without a color belongs.
 	 */
 	addCreated(path: string): void {
-		let index = 0;
-		if (this.groupedByColor) {
-			const uncolored = this.entries.findIndex((entry) => !entry.color);
-			index = uncolored >= 0 ? uncolored : this.entries.length;
-		}
-		this.addOrMove(path, index, true);
+		this.addOrMove(path, this.topIndex(), true);
+	}
+
+	/**
+	 * Puts notes on top in the given order, as one change however many there are. Notes already on
+	 * the desk keep their place. Returns how many were added.
+	 */
+	addAllOnTop(paths: string[]): number {
+		const onDesk = new Set(this.entries.map((entry) => entry.path));
+		const collapsed = this.plugin.settings.defaultFolded;
+		const added = paths
+			.filter((path) => isNotePath(path) && !onDesk.has(path))
+			.map((path) => ({ path, collapsed }));
+		if (added.length === 0) return 0;
+		this.entries.splice(this.topIndex(), 0, ...added);
+		this.commit({ type: 'add-all' });
+		return added.length;
 	}
 
 	move(path: string, targetIndex: number): void {
@@ -207,6 +221,13 @@ export class DeskStore extends Events {
 		for (const entry of matching) entry.color = undefined;
 		this.regroup();
 		this.commit({ type: 'uncolor' });
+	}
+
+	/** The top of the desk, or while grouped the top of the notes without a color, so the grouping holds. */
+	private topIndex(): number {
+		if (!this.groupedByColor) return 0;
+		const uncolored = this.entries.findIndex((entry) => !entry.color);
+		return uncolored >= 0 ? uncolored : this.entries.length;
 	}
 
 	/** While grouped, a note whose color changes moves into the block of its new color. */

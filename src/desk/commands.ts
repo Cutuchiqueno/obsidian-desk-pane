@@ -1,5 +1,6 @@
 import type { App } from 'obsidian';
 import type DeskPlugin from '../main';
+import { addInboxNotes } from './inbox';
 import { createDeskNote } from './new-note';
 import type { DeskStore } from './store';
 import { DESK_ICON, isNoteFile, VIEW_TYPE_DESK } from './types';
@@ -27,6 +28,12 @@ export function registerDeskCommands(plugin: DeskPlugin, store: DeskStore): void
 		id: 'new-note',
 		name: 'Create new note',
 		callback: () => void createNoteWithPane(plugin.app, store),
+	});
+
+	plugin.addCommand({
+		id: 'add-inbox-notes',
+		name: 'Add notes from inbox',
+		callback: () => void addInboxNotesWithPane(plugin.app, store),
 	});
 
 	plugin.addCommand({
@@ -69,4 +76,10 @@ export function registerDeskCommands(plugin: DeskPlugin, store: DeskStore): void
 async function createNoteWithPane(app: App, store: DeskStore): Promise<void> {
 	await activateDeskView(app);
 	await createDeskNote(app, store);
+}
+
+/** The pane opens first, so the notes have somewhere to show up. */
+async function addInboxNotesWithPane(app: App, store: DeskStore): Promise<void> {
+	await activateDeskView(app);
+	addInboxNotes(app, store);
 }

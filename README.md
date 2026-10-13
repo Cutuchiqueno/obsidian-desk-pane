@@ -12,6 +12,12 @@ Open the pane with the ribbon icon or the **Desk Sidebar: Open pane** command, t
   It joins the top of the desk, folded; while the desk is grouped by color, the top of the notes
   without a color. While the color filter is on, the new note stays hidden until you give it one
   of the selected colors.
+- **Add the inbox** — select the inbox button at the top of the pane, **Add notes from inbox** on
+  an empty desk, or run **Desk Sidebar: Add notes from inbox**. Every note directly in the **Inbox
+  folder** joins the top of the desk, newest first (by creation date); while the desk is grouped
+  by color, the top of the notes without a color. Notes in its subfolders stay off the desk, and
+  notes already on it keep their place. Adding more than 10 notes asks first, since the inbox is
+  the whole vault root unless you set a folder.
 - **Move a tab onto the desk** — drag a note's tab from the editor area into the pane. The tab
   closes and the note joins the list where you drop it. Dropping onto the sidebar's tab icons still
   docks the tab in the sidebar, as usual.
@@ -62,8 +68,9 @@ The list, its fold states, card heights, colors, grouping, and group names persi
 - **Add new notes folded** — whether a note arrives showing only its title, or already unfolded.
 - **Maximum card height** — how tall a card may grow, as a share of the pane's height, from 20% to
   100% (50% by default). Open panes follow the slider as you move it.
-- **Inbox folder** — where notes created from the pane go. Leave it empty, the default, for the
-  vault root. A folder that doesn't exist yet is created with the first note.
+- **Inbox folder** — where notes created from the pane go, and where **Add notes from inbox**
+  takes them from. Leave it empty, the default, for the vault root. A folder that doesn't exist yet
+  is created with the first note.
 
 A CSS snippet still overrides the setting, if you want a cap in other units:
 `.desk-view { --desk-card-max-height: 400px; }`.

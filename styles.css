@@ -71,6 +71,17 @@
 	max-width: 22em;
 }
 
+.desk-view .desk-empty-action {
+	color: var(--link-color);
+	cursor: var(--cursor-link);
+	text-decoration: var(--link-decoration);
+}
+
+.desk-view .desk-empty-action:hover {
+	color: var(--link-color-hover);
+	text-decoration: var(--link-decoration-hover);
+}
+
 .desk-view.is-drop-target .desk-empty {
 	color: var(--text-accent);
 }

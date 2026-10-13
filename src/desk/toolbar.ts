@@ -3,6 +3,7 @@ import type { App } from 'obsidian';
 import { countColors } from './color';
 import { ColorFilter } from './color-filter';
 import { ConfirmClearModal } from './confirm-clear';
+import { addInboxNotes } from './inbox';
 import { createDeskNote } from './new-note';
 import type { DeskStore } from './store';
 import type { DeskColor } from './types';
@@ -11,6 +12,7 @@ import type { DeskColor } from './types';
 export class DeskToolbar {
 	readonly el: HTMLElement;
 	private readonly newNoteButtonEl: HTMLElement;
+	private readonly inboxButtonEl: HTMLElement;
 	private readonly foldButtonEl: HTMLElement;
 	private readonly clearButtonEl: HTMLElement;
 	private readonly filterButtonEl: HTMLElement;
@@ -33,6 +35,9 @@ export class DeskToolbar {
 		this.newNoteButtonEl = createButton(buttonsEl);
 		setIcon(this.newNoteButtonEl, 'plus');
 		this.newNoteButtonEl.setAttr('aria-label', 'New note');
+		this.inboxButtonEl = createButton(buttonsEl);
+		setIcon(this.inboxButtonEl, 'inbox');
+		this.inboxButtonEl.setAttr('aria-label', 'Add notes from inbox');
 		this.foldButtonEl = createButton(buttonsEl);
 		this.clearButtonEl = createButton(buttonsEl);
 		setIcon(this.clearButtonEl, 'list-x');
@@ -65,6 +70,8 @@ export class DeskToolbar {
 		if (!buttonEl || buttonEl.hasClass('is-disabled')) return;
 		if (buttonEl === this.newNoteButtonEl) {
 			void createDeskNote(this.app, this.store);
+		} else if (buttonEl === this.inboxButtonEl) {
+			addInboxNotes(this.app, this.store);
 		} else if (buttonEl === this.foldButtonEl) {
 			this.store.setAllFolded(this.anyUnfolded());
 		} else if (buttonEl === this.clearButtonEl) {

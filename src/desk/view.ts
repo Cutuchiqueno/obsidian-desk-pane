@@ -4,6 +4,7 @@ import { editColorName, setColorAttr, showColorMenu } from './color';
 import { DeskDragController } from './desk-drag';
 import { DeskResizeController } from './desk-resize';
 import { noteMatchesFilter } from './filter';
+import { addInboxNotes } from './inbox';
 import {
 	createGroupHeader,
 	createRow,
@@ -76,6 +77,10 @@ export class DeskView extends ItemView {
 			cls: 'desk-empty-text',
 			text: 'Drag notes or tabs here to put them on your desk.',
 		});
+		const inboxLinkEl = this.emptyEl.createEl('a', {
+			cls: 'desk-empty-action',
+			text: 'Add notes from inbox',
+		});
 		this.noMatchesEl = bodyEl.createDiv({
 			cls: 'desk-empty-text desk-no-matches is-hidden',
 			text: 'No notes match the filter.',
@@ -88,6 +93,7 @@ export class DeskView extends ItemView {
 		);
 		this.addChild(new DeskResizeController(this.listEl, this.store));
 		this.registerDomEvent(this.toolbar.el, 'click', (event) => this.toolbar.onClick(event));
+		this.registerDomEvent(inboxLinkEl, 'click', () => addInboxNotes(this.app, this.store));
 		this.registerDomEvent(this.listEl, 'click', (event) => this.onClick(event));
 		this.registerDomEvent(this.listEl, 'contextmenu', (event) => this.onContextMenu(event));
 		this.registerEvent(this.store.onChange((change) => this.render(change)));

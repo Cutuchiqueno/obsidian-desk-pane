@@ -49,4 +49,4 @@ export interface DeskEntry {
 export type DeskChange =
 	| { type: 'add' | 'remove' | 'move' | 'fold' | 'color' | 'resize'; path: string }
 	| { type: 'rename'; oldPath: string; newPath: string }
-	| { type: 'fold-all' | 'clear' | 'uncolor' | 'group' | 'group-name' | 'card-height' };
+	| { type: 'add-all' | 'fold-all' | 'clear' | 'uncolor' | 'group' | 'group-name' | 'card-height' };
