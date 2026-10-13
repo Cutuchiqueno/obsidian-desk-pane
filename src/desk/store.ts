@@ -33,6 +33,11 @@ export class DeskStore extends Events {
 		return bound(this.plugin.settings.cardMaxHeight);
 	}
 
+	/** Where the pane creates new notes; empty for the vault root. */
+	get inboxFolder(): string {
+		return this.plugin.settings.inboxFolder;
+	}
+
 	setCardMaxHeight(percent: number): void {
 		const bounded = bound(percent);
 		if (bounded === this.plugin.settings.cardMaxHeight) return;
@@ -49,14 +54,24 @@ export class DeskStore extends Events {
 	}
 
 	/** The only way a note joins the desk, so the Markdown-only rule is enforced here for all of them. */
-	addOrMove(path: string, targetIndex: number): void {
+	addOrMove(path: string, targetIndex: number, collapsed = this.plugin.settings.defaultFolded): void {
 		if (!isNotePath(path)) return;
 		const isNew = !this.has(path);
-		this.relocate(path, targetIndex, {
-			path,
-			collapsed: this.plugin.settings.defaultFolded,
-		});
+		this.relocate(path, targetIndex, { path, collapsed });
 		this.commit({ type: isNew ? 'add' : 'move', path });
+	}
+
+	/**
+	 * A note created from the pane is empty and open in the editor, so its card arrives folded. It
+	 * goes on top, or while grouped on top of the notes without a color, so the grouping holds.
+	 */
+	addCreated(path: string): void {
+		let index = 0;
+		if (this.groupedByColor) {
+			const uncolored = this.entries.findIndex((entry) => !entry.color);
+			index = uncolored >= 0 ? uncolored : this.entries.length;
+		}
+		this.addOrMove(path, index, true);
 	}
 
 	move(path: string, targetIndex: number): void {

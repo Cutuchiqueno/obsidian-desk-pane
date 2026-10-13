@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+### Added
+
+- Select the **+** button at the top of the pane, or run **Desk Sidebar: Create new note**, to
+  create an empty note and start writing. It opens in a new tab with its title selected for naming,
+  and joins the top of the desk, folded. New notes go to the vault root, or to the folder set in
+  the new **Inbox folder** setting.
+
 ## 1.1.0 - 2026-10-05
 
 ### Added

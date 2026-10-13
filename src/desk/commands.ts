@@ -1,5 +1,6 @@
 import type { App } from 'obsidian';
 import type DeskPlugin from '../main';
+import { createDeskNote } from './new-note';
 import type { DeskStore } from './store';
 import { DESK_ICON, isNoteFile, VIEW_TYPE_DESK } from './types';
 
@@ -20,6 +21,12 @@ export function registerDeskCommands(plugin: DeskPlugin, store: DeskStore): void
 		id: 'open-pane',
 		name: 'Open pane',
 		callback: () => void activateDeskView(plugin.app),
+	});
+
+	plugin.addCommand({
+		id: 'new-note',
+		name: 'Create new note',
+		callback: () => void createNoteWithPane(plugin.app, store),
 	});
 
 	plugin.addCommand({
@@ -56,4 +63,10 @@ export function registerDeskCommands(plugin: DeskPlugin, store: DeskStore): void
 	});
 
 	plugin.addRibbonIcon(DESK_ICON, 'Open desk', () => void activateDeskView(plugin.app));
+}
+
+/** The pane opens first, so the note's new tab is what ends up focused. */
+async function createNoteWithPane(app: App, store: DeskStore): Promise<void> {
+	await activateDeskView(app);
+	await createDeskNote(app, store);
 }

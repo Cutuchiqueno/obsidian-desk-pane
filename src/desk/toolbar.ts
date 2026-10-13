@@ -3,12 +3,14 @@ import type { App } from 'obsidian';
 import { countColors } from './color';
 import { ColorFilter } from './color-filter';
 import { ConfirmClearModal } from './confirm-clear';
+import { createDeskNote } from './new-note';
 import type { DeskStore } from './store';
 import type { DeskColor } from './types';
 
 /** The button row at the top of the pane, built like the ones in Obsidian's own sidebar panes. */
 export class DeskToolbar {
 	readonly el: HTMLElement;
+	private readonly newNoteButtonEl: HTMLElement;
 	private readonly foldButtonEl: HTMLElement;
 	private readonly clearButtonEl: HTMLElement;
 	private readonly filterButtonEl: HTMLElement;
@@ -27,6 +29,10 @@ export class DeskToolbar {
 	) {
 		this.el = parentEl.createDiv({ cls: 'nav-header' });
 		const buttonsEl = this.el.createDiv({ cls: 'nav-buttons-container' });
+		// First, where the File Explorer has its own **New note** button.
+		this.newNoteButtonEl = createButton(buttonsEl);
+		setIcon(this.newNoteButtonEl, 'plus');
+		this.newNoteButtonEl.setAttr('aria-label', 'New note');
 		this.foldButtonEl = createButton(buttonsEl);
 		this.clearButtonEl = createButton(buttonsEl);
 		setIcon(this.clearButtonEl, 'list-x');
@@ -57,7 +63,9 @@ export class DeskToolbar {
 		}
 		const buttonEl = event.target.closest('.nav-action-button');
 		if (!buttonEl || buttonEl.hasClass('is-disabled')) return;
-		if (buttonEl === this.foldButtonEl) {
+		if (buttonEl === this.newNoteButtonEl) {
+			void createDeskNote(this.app, this.store);
+		} else if (buttonEl === this.foldButtonEl) {
 			this.store.setAllFolded(this.anyUnfolded());
 		} else if (buttonEl === this.clearButtonEl) {
 			new ConfirmClearModal(this.app, this.store.entries.length, () => this.store.clear()).open();

@@ -11,6 +11,8 @@ export interface DeskSettings {
 	groupNames: GroupNames;
 	/** Percent of the pane's height a card may grow to. */
 	cardMaxHeight: number;
+	/** Where the pane creates new notes; empty for the vault root. */
+	inboxFolder: string;
 }
 
 export const DEFAULT_SETTINGS: DeskSettings = {
@@ -19,6 +21,7 @@ export const DEFAULT_SETTINGS: DeskSettings = {
 	groupedByColor: false,
 	groupNames: {},
 	cardMaxHeight: CARD_HEIGHT_DEFAULT,
+	inboxFolder: '',
 };
 
 export class DeskSettingTab extends PluginSettingTab {
@@ -49,6 +52,12 @@ export class DeskSettingTab extends PluginSettingTab {
 					defaultValue: CARD_HEIGHT_DEFAULT,
 					displayFormat: (value) => `${value}%`,
 				},
+			},
+			{
+				name: 'Inbox folder',
+				desc: 'Where notes created from the Desk pane go. Leave empty for the vault root.',
+				aliases: ['new note location', 'new notes folder'],
+				control: { type: 'folder', key: 'inboxFolder', placeholder: '/', includeRoot: true },
 			},
 		];
 	}
