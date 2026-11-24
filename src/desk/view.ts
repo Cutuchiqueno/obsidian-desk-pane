@@ -110,6 +110,9 @@ export class DeskView extends ItemView {
 				if (this.filterQuery && this.isOnDesk(file.path)) void this.applyFilter();
 			}),
 		);
+		// A card can arrive before its note does, when another device synced the desk first.
+		this.registerEvent(this.app.vault.on('create', (file) => this.refreshNote(file.path)));
+		this.registerEvent(this.app.vault.on('rename', (file) => this.refreshNote(file.path)));
 		// Comes after `modify`, once Obsidian has found the note's headings and blocks again.
 		this.registerEvent(this.app.metadataCache.on('changed', (file) => this.refreshParts(file.path)));
 		this.render();
@@ -347,6 +350,23 @@ export class DeskView extends ItemView {
 			this.rows.set(key, row);
 			row.el.dataset.key = key;
 			void this.titleRow(row, entry);
+		}
+	}
+
+	/**
+	 * A note on the desk showed up in the vault: its cards stop saying it is missing, and those
+	 * unfolded get their preview.
+	 */
+	private refreshNote(path: string): void {
+		for (const entry of this.store.entries) {
+			if (entry.path !== path) continue;
+			const row = this.rows.get(entryKey(entry));
+			if (!row) continue;
+			void this.titleRow(row, entry);
+			if (!entry.collapsed && (!row.preview || row.partMissing)) {
+				this.unmountPreview(row);
+				void this.mountPreview(row, entry);
+			}
 		}
 	}
 

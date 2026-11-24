@@ -96,6 +96,31 @@ The list, its fold states, card heights, colors, grouping, and group names persi
 A CSS snippet still overrides the setting, if you want a cap in other units:
 `.desk-view { --desk-card-max-height: 400px; }`.
 
+### Sync across devices
+
+With Obsidian Sync, the desk can follow you from one device to the next. On each device, turn on
+**Sync desk across devices** in the plugin's settings, and **Installed community plugins** under
+**Settings → Sync → Vault configuration sync**: the desk travels in the plugin's settings file.
+Update Desk Sidebar on every device first, as older versions don't read the synced desk. Desk
+Sidebar makes no network requests of its own; Obsidian Sync carries the file.
+
+- The cards, their order, fold states and colors, grouping, group names, and the **Add new notes
+  folded**, **Maximum card height**, and **Inbox folder** settings sync. Card heights you drag stay
+  on each device, as screens differ.
+- Turning sync on brings in the desk the device already had. What other devices synced before wins:
+  their cards keep their place and colors, and cards only this device had join on top.
+- When two devices change the desk while apart, both changes stay, as long as they touch different
+  cards or different things about a card. Where both changed the same thing, such as one card's
+  color, the later change wins. A card removed on one device stays removed even if the other folded
+  or colored it meanwhile; putting it on the desk again brings it back. If both reordered the desk,
+  one order wins, and no card goes missing.
+- A card can arrive before its note, when the desk syncs first; it fills in once the note is there.
+  A note a device doesn't sync, through selective sync for instance, keeps its card on that device,
+  shown as missing.
+- The settings list the devices that sync the desk, and when each last did. A device missing from
+  the list probably lacks one of the two settings above. Name this device under **Device name**.
+- Turning sync off keeps the desk as it is on that device, and stops sharing its changes.
+
 ### Known limitations
 
 - Drag and drop needs a mouse or trackpad, so it does nothing on touch screens. The commands and
@@ -108,6 +133,10 @@ A CSS snippet still overrides the setting, if you want a cap in other units:
 - A list item's card shows the item without the items nested under it.
 - A heading's card stays with the heading's text. Rename the heading and the card shows it's gone,
   until you add the heading again.
+- Syncing the desk needs Obsidian Sync with **Installed community plugins** turned on, which syncs
+  every community plugin and its settings, not just this one.
+- A card changed on one device while its note is renamed on another follows the rename and loses
+  the change.
 
 ## Development
 

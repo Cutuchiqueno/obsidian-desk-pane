@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+### Added
+
+- Sync the desk across devices with Obsidian Sync. Turn on **Sync desk across devices** in the
+  settings on each device, along with **Installed community plugins** in Obsidian Sync's settings.
+  The cards, their order, fold states, colors, grouping, group names, and the plugin's settings
+  follow from one device to the next; card heights stay on each device. Changes made on two devices
+  while apart are merged card by card, and the settings list every device that syncs the desk.
+
 ## 1.2.0 - 2026-10-13
 
 ### Added

@@ -30,39 +30,28 @@ export const CARD_HEIGHT_MIN = 20;
 export const CARD_HEIGHT_MAX = 100;
 export const CARD_HEIGHT_DEFAULT = 50;
 
-/** Obsidian's named theme colors, in the order grouping sorts them. */
-export const DESK_COLORS = ['red', 'orange', 'yellow', 'green', 'cyan', 'blue', 'purple', 'pink'] as const;
-
-export type DeskColor = (typeof DESK_COLORS)[number];
-
-/** Names given to groups, by their color, or `none` for the notes without one. */
-export type GroupNames = Partial<Record<DeskColor | 'none', string>>;
-
-/** What a card shows: a whole note, or one heading or block of it. */
-export interface DeskTarget {
-	path: string;
-	/** `#Heading` or `#^blockid`, as in a link; without it, the card shows the whole note. */
-	subpath?: string;
-}
-
-export interface DeskEntry extends DeskTarget {
-	collapsed: boolean;
-	color?: DeskColor;
-	/** Pixels, from dragging the card's bottom edge; without it, the preview fits its note. */
-	previewHeight?: number;
-}
-
-/**
- * Tells cards apart, in the link form `Note.md#Heading`. A note can be on the desk once as a whole,
- * where the key is its path, and once more for each of its headings and blocks.
- */
-export function entryKey(target: DeskTarget): string {
-	return target.subpath ? `${target.path}${target.subpath}` : target.path;
-}
+// The data model lives in `model.ts`, free of Obsidian imports so the sync modules can be tested.
+export {
+	DESK_COLORS,
+	GROUP_NAME_KEYS,
+	colorRank,
+	entryKey,
+	isDeskColor,
+	isInColorBlocks,
+} from './model';
+export type { DeskColor, DeskEntry, DeskTarget, GroupNames } from './model';
 
 export type DeskChange =
+	/**
+	 * `add` comes from every deliberate gesture that puts a card on the desk, also when the card is
+	 * already there and only moves: with sync on, it puts the card back if another device took it off.
+	 */
 	| { type: 'add' | 'remove' | 'move' | 'fold' | 'color' | 'resize'; key: string }
 	/** A note left the vault, or stopped being Markdown, taking all of its cards with it. */
 	| { type: 'delete'; path: string }
 	| { type: 'rename'; oldPath: string; newPath: string }
-	| { type: 'add-all' | 'fold-all' | 'clear' | 'uncolor' | 'group' | 'group-name' | 'card-height' };
+	| { type: 'add-all' | 'fold-all' | 'clear' | 'uncolor' | 'group' | 'group-name' | 'card-height' }
+	/** A setting the desk keeps in step across devices changed: folding new notes, the inbox folder. */
+	| { type: 'prefs' }
+	/** The desk took in what other devices changed; the pane renders it all anew. */
+	| { type: 'sync' };

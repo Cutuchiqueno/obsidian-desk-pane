@@ -50,6 +50,10 @@ export class DeskResizeController extends Component {
 
 	override onunload(): void {
 		this.setHover(null);
+		if (this.drag) {
+			this.drag = null;
+			this.store.endGesture();
+		}
 	}
 
 	/** Marks the card whose resize handle is under `target`, if any, and unmarks the last one. */
@@ -93,6 +97,7 @@ export class DeskResizeController extends Component {
 			minHeight: Math.min(edges + padding + MIN_PREVIEW_LINES * lineHeight, startHeight),
 			maxHeight: Math.min(edges + previewEl.scrollHeight, cap),
 		};
+		this.store.beginGesture();
 	}
 
 	private onPointerMove(evt: PointerEvent): void {
@@ -111,7 +116,10 @@ export class DeskResizeController extends Component {
 		const drag = this.drag;
 		if (!drag || evt.pointerId !== drag.pointerId) return;
 		this.drag = null;
-		if (drag.height === undefined) return;
+		if (drag.height === undefined) {
+			this.store.endGesture();
+			return;
+		}
 		drag.cardEl.removeClass('is-resizing');
 		// Dragged all the way open, the card fits its note again, and keeps doing so as the note grows.
 		const rounded = Math.round(drag.height);
@@ -119,5 +127,6 @@ export class DeskResizeController extends Component {
 		setPreviewHeight(drag.previewEl, height);
 		const key = drag.cardEl.dataset.key;
 		if (key) this.store.setPreviewHeight(key, height);
+		this.store.endGesture();
 	}
 }

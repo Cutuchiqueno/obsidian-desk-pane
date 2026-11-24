@@ -55,7 +55,7 @@ export class DeskDragController extends Component {
 		// Capture phase, so the editor never sees a Desk note dropped on it and inserts a link instead.
 		const capture = { capture: true };
 		// Also runs before a row's own dragstart: a drag whose row was re-rendered away never got its dragend.
-		this.registerDomEvent(document, 'dragstart', () => (this.rowDrag = null), capture);
+		this.registerDomEvent(document, 'dragstart', () => this.endRowDrag(), capture);
 		this.registerDomEvent(document, 'dragenter', (evt) => this.onEditorDragOver(evt), capture);
 		this.registerDomEvent(document, 'dragover', (evt) => this.onEditorDragOver(evt), capture);
 		this.registerDomEvent(document, 'drop', (evt) => this.onEditorDrop(evt), capture);
@@ -76,16 +76,28 @@ export class DeskDragController extends Component {
 		rowEl.addClass('is-dragging');
 		const target = { path: entry.path, subpath: entry.subpath };
 		this.rowDrag = { key, target, rowEl, openedInTab: false };
+		this.store.beginGesture();
 	}
 
 	private onRowDragEnd(): void {
 		const drag = this.rowDrag;
-		this.rowDrag = null;
 		this.clearDropState();
 		if (!drag) return;
 		drag.rowEl.removeClass('is-dragging');
 		// Removed only now, so the row is still in place while Obsidian finishes the drag.
 		if (drag.openedInTab) this.store.remove(drag.key);
+		this.endRowDrag();
+	}
+
+	/** Forgets the row being dragged, and lets changes from other devices through again. */
+	private endRowDrag(): void {
+		if (!this.rowDrag) return;
+		this.rowDrag = null;
+		this.store.endGesture();
+	}
+
+	override onunload(): void {
+		this.endRowDrag();
 	}
 
 	private onPaneDragOver(evt: DragEvent): void {

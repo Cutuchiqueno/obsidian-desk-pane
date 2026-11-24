@@ -6,13 +6,29 @@ import {
 	CARD_HEIGHT_DEFAULT,
 	CARD_HEIGHT_MAX,
 	CARD_HEIGHT_MIN,
-	DESK_COLORS,
+	colorRank,
 	entryKey,
+	isInColorBlocks,
 	isNotePath,
 } from './types';
 import type { DeskChange, DeskColor, DeskEntry, DeskTarget, GroupNames } from './types';
+import type { DeskState } from './sync/replica';
+
+/** What the store needs from the sync engine; set while sync runs on this device. */
+export interface DeskSync {
+	readonly active: boolean;
+	/** Takes in a change the store just committed. */
+	record(change: DeskChange): void;
+	/** Puts the store back in step with the synced desk after a commit, if they differ. */
+	reconcile(): void;
+}
 
 export class DeskStore extends Events {
+	sync: DeskSync | null = null;
+	/** Called when the last drag or resize in progress ends. */
+	gestureEnded: (() => void) | null = null;
+	private gestures = 0;
+
 	constructor(private plugin: DeskPlugin) {
 		super();
 	}
@@ -37,6 +53,58 @@ export class DeskStore extends Events {
 	/** Where the pane creates new notes; empty for the vault root. */
 	get inboxFolder(): string {
 		return this.plugin.settings.inboxFolder;
+	}
+
+	/**
+	 * A drag or resize is in progress. Changes from other devices wait until it ends, so cards don't
+	 * shift under the pointer and the drop lands where it shows.
+	 */
+	beginGesture(): void {
+		this.gestures++;
+	}
+
+	endGesture(): void {
+		if (this.gestures === 0) return;
+		this.gestures--;
+		if (this.gestures === 0) this.gestureEnded?.();
+	}
+
+	get gestureActive(): boolean {
+		return this.gestures > 0;
+	}
+
+	/** The desk as the sync engine sees it: cards in order, grouping, group names and settings. */
+	snapshot(): DeskState {
+		const settings = this.plugin.settings;
+		return {
+			entries: settings.entries,
+			grouped: settings.groupedByColor,
+			names: settings.groupNames,
+			prefs: {
+				defaultFolded: settings.defaultFolded,
+				cardMaxHeight: settings.cardMaxHeight,
+				inboxFolder: settings.inboxFolder,
+			},
+		};
+	}
+
+	/** Shows the desk as synced from other devices, replacing the whole list. */
+	applySynced(state: DeskState): void {
+		const settings = this.plugin.settings;
+		const heightChanged = settings.cardMaxHeight !== state.prefs.cardMaxHeight;
+		settings.entries.splice(0, settings.entries.length, ...state.entries);
+		settings.groupedByColor = state.grouped;
+		settings.groupNames = state.names;
+		settings.defaultFolded = state.prefs.defaultFolded;
+		settings.cardMaxHeight = state.prefs.cardMaxHeight;
+		settings.inboxFolder = state.prefs.inboxFolder;
+		this.trigger('changed', { type: 'sync' } satisfies DeskChange);
+		if (heightChanged) this.trigger('changed', { type: 'card-height' } satisfies DeskChange);
+	}
+
+	/** A setting the desk keeps in step across devices was changed in the settings tab. */
+	prefsChanged(): void {
+		this.commit({ type: 'prefs' });
 	}
 
 	setCardMaxHeight(percent: number): void {
@@ -73,9 +141,9 @@ export class DeskStore extends Events {
 		// An empty subpath is the whole note; `saveData` leaves an undefined one out of `data.json`.
 		const entry: DeskEntry = { path, subpath: target.subpath || undefined, collapsed };
 		const key = entryKey(entry);
-		const isNew = !this.has(key);
 		this.relocate(key, targetIndex, entry);
-		this.commit({ type: isNew ? 'add' : 'move', key });
+		// `add` even when the card was already there: putting a note on the desk is deliberate.
+		this.commit({ type: 'add', key });
 	}
 
 	/** On top, where a new card without a color belongs. */
@@ -283,27 +351,15 @@ export class DeskStore extends Events {
 		if (this.groupedByColor && !isInColorBlocks(this.entries)) {
 			this.plugin.settings.groupedByColor = false;
 		}
-		void this.plugin.saveData(this.plugin.settings);
+		const sync = this.sync?.active ? this.sync : null;
+		if (sync) sync.record(change);
+		else void this.plugin.saveData(this.plugin.settings);
 		this.trigger('changed', change);
+		sync?.reconcile();
 	}
 }
 
 function bound(percent: number): number {
 	if (!Number.isFinite(percent)) return CARD_HEIGHT_DEFAULT;
 	return Math.min(Math.max(Math.round(percent), CARD_HEIGHT_MIN), CARD_HEIGHT_MAX);
-}
-
-/** Palette order, with the notes that have no color last. */
-function colorRank(entry: DeskEntry): number {
-	return entry.color ? DESK_COLORS.indexOf(entry.color) : DESK_COLORS.length;
-}
-
-function isInColorBlocks(entries: DeskEntry[]): boolean {
-	let previousRank = -Infinity;
-	for (const entry of entries) {
-		const rank = colorRank(entry);
-		if (rank < previousRank) return false;
-		previousRank = rank;
-	}
-	return entries.some((entry) => entry.color);
 }

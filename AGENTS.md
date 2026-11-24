@@ -83,6 +83,12 @@ npm run build
 
 ## Testing
 
+- Unit tests: `npm test` bundles every `src/**/*.test.ts` with esbuild (`esbuild.test.mjs`) and runs
+  the bundles with `node --test`. Modules under test must not import `obsidian`, which Node can't
+  load: keep such logic in pure modules like `src/desk/model.ts` and `src/desk/sync/replica.ts`.
+- `src/desk/sync/simulation.test.ts` runs devices against a simulated Obsidian Sync that behaves as
+  measured on real devices (2026-11-24). `SIM_SEED=<n> npm test` replays one seed, `SIM_MAX=<n>`
+  runs more seeds than the default 300.
 - Manual install for testing: copy or symlink `main.js`, `manifest.json`, `styles.css` (if any) to:
     ```
     <Vault>/.obsidian/plugins/desk-sidebar/
